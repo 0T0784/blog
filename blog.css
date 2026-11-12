@@ -55,21 +55,27 @@ header{z-index:10}
 @media(max-width:860px){.contents{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){.leaves{display:none}.js .rv{opacity:1;transform:none;transition:none}html{scroll-behavior:auto}}
 
-/* 記事 */
-.post{padding:56px 0 0}
-.post .meta{text-align:center;color:var(--sub);letter-spacing:.2em;font-size:.9rem}
-.post h1{text-align:center;margin:.3em 0 1.6em;font-size:clamp(1.6rem,4.4vw,2.4rem);line-height:1.5;color:var(--deep)}
-.body p{margin:0 0 1.6em}
-.body h3,.body h4{color:var(--deep);margin:2.2em 0 .8em;line-height:1.6}
-.body h3{font-size:1.35rem;border-bottom:1px solid var(--gilt);padding-bottom:.2em}
+/* 記事ページ（罫線ノート風） */
+.sheet{--lh:clamp(2.3rem,6vw,2.6rem);--pad:clamp(20px,5vw,44px);--sheet:#fdf6e6;--rule:#e8d6b0;
+  margin:48px 0 0;background:var(--sheet);border:1px solid #ecdcb9;border-radius:6px;box-shadow:0 12px 40px #43261a26,0 2px 6px #43261a14;overflow:hidden}
+.sheet header{position:static;background:none;backdrop-filter:none;border:0;padding:28px var(--pad) 18px;border-bottom:2px solid #e6d3a3}
+.sheet .label{margin:0;font-family:"Playfair Display","Noto Serif JP",serif;font-size:.85rem;letter-spacing:.2em;color:var(--sub)}
+.sheet h1{margin:.3em 0 0;font-size:clamp(1.35rem,4.2vw,1.75rem);line-height:1.5;letter-spacing:.06em;color:var(--maple)}
+.body{padding-top:var(--lh);padding-bottom:var(--lh);font-family:"Klee One","Noto Serif JP","Hiragino Mincho ProN",serif;font-size:1.05rem;line-height:var(--lh);letter-spacing:.05em;
+  background:repeating-linear-gradient(to bottom,transparent 0,transparent calc(var(--lh) - 1px),var(--rule) calc(var(--lh) - 1px),var(--rule) var(--lh))}
+.body>*{margin-inline:var(--pad)}
+.body p{margin-block:0 var(--lh)}
+.body h3,.body h4{margin-block:0 var(--lh);font-family:"Noto Serif JP",serif;font-weight:700;color:var(--deep);line-height:var(--lh);letter-spacing:.06em}
+.body h3{font-size:1.25rem;box-shadow:inset 0 -2px 0 var(--gilt)}
 .body h4{font-size:1.1rem}
-.body figure{margin:2em 0;text-align:center}
-.body figure img{max-width:100%;height:auto;border:1px solid var(--line);padding:6px;background:#fffaf0}
-.body figcaption{font-size:.85rem;color:var(--sub);margin-top:.5em}
-.body blockquote{margin:1.6em 0;padding:.2em 1.2em;border-left:3px solid var(--gilt);color:var(--sub)}
-.body ul{margin:0 0 1.6em;padding-left:1.4em}
-.yt{margin:2em 0;aspect-ratio:16/9;border:1px solid var(--gilt);padding:6px;background:#fffaf0}
-.yt iframe{width:100%;height:100%;border:0;display:block}
+.body ul{margin-block:0 var(--lh);padding-left:1.3em}
+.body blockquote{margin-block:0 var(--lh);padding:0 1em;border-left:3px solid var(--gilt);color:var(--sub)}
+.body figure,.body .yt{margin-block:calc(var(--lh)/2);background:var(--sheet)}
+.body figure{width:fit-content;max-width:calc(100% - 2*var(--pad));padding:8px;text-align:center;border:1px solid var(--line);box-shadow:0 3px 10px #43261a1f;margin-inline:auto}
+.body figure img{display:block;max-width:100%;height:auto;margin:0 auto}
+.body figcaption{font-size:.85rem;color:var(--sub);line-height:1.6;padding-top:6px}
+.body .yt{width:calc(100% - 2*var(--pad));margin-inline:auto;aspect-ratio:16/9;padding:6px;border:1px solid var(--gilt);box-shadow:0 3px 10px #43261a1f}
+.body .yt iframe{width:100%;height:100%;border:0;display:block}
 .pn{display:flex;justify-content:space-between;gap:16px;margin:64px 0 0;padding-top:20px;border-top:1px solid var(--line);font-size:.95rem}
 .pn a{text-decoration:none;max-width:48%}
 .back{text-align:center;margin:40px 0 0}

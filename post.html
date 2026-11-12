@@ -5,14 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>雑記帳</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&family=Klee+One:wght@400;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="blog.css">
 </head>
 <body>
-<main class="wrap"><article class="post" id="post"><p class="empty">読み込み中…</p></article></main>
+<main class="wrap"><div id="post"><p class="empty">読み込み中…</p></div></main>
 <script src="blog.js"></script>
 <script>
 chrome(true);
+// 写真・動画の高さを罫線の1行分の倍数にそろえて、あとに続く文章が罫線に乗るようにする
+function snap(){
+  const b=document.querySelector(".body");if(!b)return;
+  const t=b.querySelector("p,li,h3,h4");if(!t)return;
+  const lh=parseFloat(getComputedStyle(t).lineHeight);if(!lh)return;
+  b.querySelectorAll("figure,.yt").forEach(e=>{
+    e.style.marginTop=e.style.marginBottom="";
+    const h=e.getBoundingClientRect().height, top=lh/2, total=Math.ceil((h+lh)/lh)*lh;
+    e.style.marginTop=top+"px";e.style.marginBottom=(total-h-top)+"px";
+  });
+}
 (async()=>{
   const slug=new URLSearchParams(location.search).get("p")||"", box=document.getElementById("post");
   try{
@@ -22,10 +33,13 @@ chrome(true);
     const i=vis.findIndex(p=>p.slug===slug), me=vis[i];
     document.title=`${me.title} | ${SITE.name}`;
     const nb=(p,t)=>p?`<a href="post.html?p=${encodeURIComponent(p.slug)}">${t}</a>`:"<span></span>";
-    box.innerHTML=`<div class="meta"><time>${fmt(me.date)}</time></div><h1>${esc(me.title)}</h1>
-      <div class="body">${md(src)}</div>
+    const no=String(vis.length-i).padStart(2,"0");   // 古い記事から数えた番号
+    box.innerHTML=`<article class="sheet"><header><p class="label">${fmt(me.date)} ・ ${no}</p><h1>${esc(me.title)}</h1></header>
+      <div class="body">${md(src)}</div></article>
       <div class="pn">${nb(vis[i+1],"← "+(vis[i+1]?esc(vis[i+1].title):""))}${nb(vis[i-1],(vis[i-1]?esc(vis[i-1].title):"")+" →")}</div>
       <p class="back"><a class="btn" href="index.html">記事一覧へ</a></p>`;
+    snap();document.querySelectorAll(".body img").forEach(m=>m.addEventListener("load",snap));
+    addEventListener("resize",snap);document.fonts&&document.fonts.ready.then(snap);
   }catch(e){box.innerHTML='<p class="empty">記事が見つかりませんでした。</p><p class="back"><a class="btn" href="index.html">記事一覧へ</a></p>'}
 })();
 </script>
