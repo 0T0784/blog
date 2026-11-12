@@ -13,17 +13,6 @@
 <script src="blog.js"></script>
 <script>
 chrome(true);
-// 写真・動画の高さを罫線の1行分の倍数にそろえて、あとに続く文章が罫線に乗るようにする
-function snap(){
-  const b=document.querySelector(".body");if(!b)return;
-  const t=b.querySelector("p,li,h3,h4");if(!t)return;
-  const lh=parseFloat(getComputedStyle(t).lineHeight);if(!lh)return;
-  b.querySelectorAll("figure,.yt").forEach(e=>{
-    e.style.marginTop=e.style.marginBottom="";
-    const h=e.getBoundingClientRect().height, top=lh/2, total=Math.ceil((h+lh)/lh)*lh;
-    e.style.marginTop=top+"px";e.style.marginBottom=(total-h-top)+"px";
-  });
-}
 (async()=>{
   const slug=new URLSearchParams(location.search).get("p")||"", box=document.getElementById("post");
   try{
@@ -38,8 +27,6 @@ function snap(){
       <div class="body">${md(src)}</div></article>
       <div class="pn">${nb(vis[i+1],"← "+(vis[i+1]?esc(vis[i+1].title):""))}${nb(vis[i-1],(vis[i-1]?esc(vis[i-1].title):"")+" →")}</div>
       <p class="back"><a class="btn" href="index.html">記事一覧へ</a></p>`;
-    snap();document.querySelectorAll(".body img").forEach(m=>m.addEventListener("load",snap));
-    addEventListener("resize",snap);document.fonts&&document.fonts.ready.then(snap);
   }catch(e){box.innerHTML='<p class="empty">記事が見つかりませんでした。</p><p class="back"><a class="btn" href="index.html">記事一覧へ</a></p>'}
 })();
 </script>
