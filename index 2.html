@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>雑記帳</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="blog.css">
+</head>
+<body>
+<div class="leaves" id="leaves" aria-hidden="true"></div>
+<main>
+  <section><div class="wrap wide">
+    <h2 class="sec" data-en="Journal">雑記</h2>
+    <div class="contents" id="list"></div>
+  </div></section>
+</main>
+<script src="blog.js"></script>
+<script>
+chrome(true);
+const box=document.getElementById("list");
+
+// 落ち葉（控えめに）
+if(!matchMedia("(prefers-reduced-motion: reduce)").matches){
+  const L=document.getElementById("leaves");
+  for(let i=0;i<9;i++){const l=document.createElement("span");l.className="leaf";l.textContent=i%2?"🍂":"🍁";
+    l.style.cssText=`left:${Math.random()*100}%;--dx:${(Math.random()*160-80)|0}px;--rot:${(Math.random()*540-270)|0}deg;animation-duration:${14+Math.random()*12}s;animation-delay:${-Math.random()*20}s;font-size:${14+Math.random()*14}px`;
+    L.append(l)}
+}
+
+// 初回のみ下からフェードイン
+function reveal(els){
+  document.documentElement.classList.add("js");
+  els.forEach((e,i)=>{e.classList.add("rv");e.style.setProperty("--d",((i%2)*.15).toFixed(2)+"s")});
+  if(!("IntersectionObserver" in window)){els.forEach(e=>e.classList.add("in"));return}
+  const io=new IntersectionObserver(es=>es.forEach(x=>{if(x.isIntersecting){x.target.classList.add("in");io.unobserve(x.target)}}),{threshold:.12,rootMargin:"0px 0px -4% 0px"});
+  els.forEach(e=>io.observe(e));
+}
+
+getPosts().then(ps=>{
+  if(!ps.length){box.innerHTML='<p class="empty">まだ記事がありません。</p>';return}
+  box.innerHTML=ps.map(p=>`<a class="play" href="post.html?p=${encodeURIComponent(p.slug)}"><div>
+    <div class="th">${p.thumb?`<img src="${esc(p.thumb)}" alt="" loading="lazy" onerror="this.parentNode.textContent='🍁'">`:"🍁"}</div>
+    <time>${fmt(p.date)}</time><h3>${esc(p.title)}</h3><p>${esc(p.excerpt)}</p>
+    <span class="btn">読む</span></div></a>`).join("");
+  reveal([document.querySelector("h2.sec"),...box.querySelectorAll(".play")]);
+}).catch(()=>{box.innerHTML='<p class="empty">記事一覧（posts.json）を読み込めませんでした。make_posts.py を実行したか確認してください。</p>'});
+</script>
+</body>
+</html>
