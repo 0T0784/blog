@@ -1,5 +1,5 @@
 /* ★ ブログ名・ロゴ・ホームはここで変更
-   home … ホームのURL（https://〜）。入れると、ロゴと「ホーム」メニューがそこへ飛ぶ。空ならロゴは記事一覧へ
+   home … ホームのURL（https://〜）。入れると、ロゴを押したときそこへ飛ぶ。空ならロゴは記事一覧へ
    logo … ロゴ画像のパス。画像が無いときはブログ名の文字が出る */
 const SITE={name:"雑記帳",home:"https://example.com/home.html",logo:"images/logo.png"};
 const esc=s=>s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
@@ -10,7 +10,7 @@ const fmt=d=>d.replace(/-/g,".");
 function chrome(cur){
   document.body.insertAdjacentHTML("afterbegin",
    `<header><nav class="nav" aria-label="メニュー"><a class="logo" href="${SITE.home||"index.html"}" aria-label="${SITE.home?"ホームへ":"記事一覧へ"}"><img src="${SITE.logo}" alt="" onerror="this.parentNode.textContent=SITE.name"></a>
-    <ul>${SITE.home?`<li><a href="${SITE.home}">ホーム</a></li>`:""}<li><a href="index.html" class="${cur?"on":""}">雑記</a></li></ul></nav></header>`);
+    <ul><li><a href="index.html" class="${cur?"on":""}">雑記</a></li></ul></nav></header>`);
   document.body.insertAdjacentHTML("beforeend",`<footer>© ${SITE.name}</footer>`);
 }
 
@@ -24,7 +24,7 @@ function md(src){
   for(const raw of src.split(/\r?\n/)){
     const l=raw.trim();let m;
     if(!l){fp();fl();continue}
-    if(/^# /.test(l))continue;                                   // 先頭の「# タイトル」は別で表示
+    if(/^#(?!#)\s*\S/.test(l))continue;                                   // 先頭の「# タイトル」は別で表示
     if(m=l.match(/^!\[(.*?)\]\((.+?)\)$/)){fp();fl();
       out.push(`<figure><img src="${esc(m[2])}" alt="${esc(m[1])}" loading="lazy">${m[1]?`<figcaption>${esc(m[1])}</figcaption>`:""}</figure>`);continue}
     if(/^https?:\/\/\S+$/.test(l)){fp();fl();const id=ytId(l);                 // 単独行のURL
