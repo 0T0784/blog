@@ -39,3 +39,6 @@ function md(src){
   fp();fl();return out.join("\n");
 }
 const getPosts=()=>fetch("posts.json",{cache:"no-store"}).then(r=>r.json()).then(j=>j.posts);
+
+// 記事番号（古い記事から数えた番号。一覧に出ない記事は、その記事自身のページでだけ数に入れる）
+const noOf=(ps,p)=>{const v=ps.filter(x=>!x.hidden||x.slug===p.slug);return String(v.length-v.findIndex(x=>x.slug===p.slug)).padStart(2,"0")};

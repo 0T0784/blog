@@ -34,7 +34,7 @@ for f in sorted((root / "posts").glob("*.md")):
         elif yt and not thumb:
             thumb = f"https://i.ytimg.com/vi/{yt.group(1)}/hqdefault.jpg"
         elif not excerpt and not img and not yt and not re.match(r"(#|[-*>] |https?://)", l):
-            excerpt = re.sub(r"[*\[\]]|\(https?:[^)]*\)", "", l)[:80]
+            excerpt = re.sub(r"[*\[\]]|\(https?:[^)]*\)", "", l)[:120]
     title = title or f.stem[len(m.group(0)):] or f.stem   # 題名が無いときはファイル名の日付より後ろを使う
     posts.append({"slug": f.stem, "title": title, "date": m.group(1), "excerpt": excerpt, "thumb": explicit or thumb,
                   "hidden": any(w in f.stem.lower() for w in HIDDEN_WORDS)})
