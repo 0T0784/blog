@@ -48,7 +48,7 @@ function draw(){
   const ps=ALL.filter(p=>q?norm(p.title+" "+p.excerpt+" "+nameOf(p)).includes(q):!p.hidden);
   if(!ps.length){box.innerHTML=`<p class="empty" style="grid-column:1/-1">${q?"見つかりませんでした。":"まだ記事がありません。"}</p>`;return}
   box.innerHTML=ps.map(p=>`<a class="play" href="post.html?p=${encodeURIComponent(p.slug)}"><div>
-    <div class="th">${p.thumb?`<img src="${esc(p.thumb)}" alt="" loading="lazy" onerror="this.parentNode.textContent='🍁'">`:"🍁"}</div>
+    <div class="th">${(p.thumb||SITE.thumb)?`<img src="${esc(p.thumb||SITE.thumb)}" alt="" loading="lazy" onerror="if(this.dataset.f){this.parentNode.textContent='🍁'}else{this.dataset.f=1;this.src=SITE.thumb}">`:"🍁"}</div>
     <time>${fmt(p.date)}</time><h3>${esc(p.title)}</h3><p>${esc(p.excerpt)}</p>
     <span class="btn">読む</span></div></a>`).join("");
   if(first){first=false;reveal([document.querySelector("h2.sec"),...box.querySelectorAll(".play")])}

@@ -14,7 +14,7 @@ for f in sorted((root / "posts").glob("*.md")):
         print(f"スキップ: {f.name}（ファイル名を 2026-11-12-名前.md の形にしてね）")
         continue
     text = f.read_text(encoding="utf-8-sig")   # Windowsのメモ帳が付けるBOMも許容
-    title, excerpt, thumb = "", "", ""
+    title, excerpt, thumb, explicit = "", "", "", ""
     for line in text.splitlines():
         l = line.strip()
         if not l:
@@ -22,6 +22,10 @@ for f in sorted((root / "posts").glob("*.md")):
         t = re.match(r"#(?!#)\s*(\S.*)", l)          # 「# 題名」「#題名」どちらもOK（## は見出し扱い）
         if t and not title:
             title = t.group(1).strip()
+            continue
+        s = re.match(r"(?:thumb|サムネ)\s*[:：]\s*(\S+)$", l, re.I)   # 「サムネ: images/xxx.jpg」でサムネを指定
+        if s:
+            explicit = s.group(1)
             continue
         img = re.match(r"!\[.*?\]\((.+?)\)$", l)
         yt = re.search(r"(?:[?&]v=|youtu\.be/|embed/|shorts/|live/)([\w-]{11})", l) if re.match(r"https?://\S+$", l) else None
@@ -32,7 +36,7 @@ for f in sorted((root / "posts").glob("*.md")):
         elif not excerpt and not img and not yt and not re.match(r"(#|[-*>] |https?://)", l):
             excerpt = re.sub(r"[*\[\]]|\(https?:[^)]*\)", "", l)[:80]
     title = title or f.stem[len(m.group(0)):] or f.stem   # 題名が無いときはファイル名の日付より後ろを使う
-    posts.append({"slug": f.stem, "title": title, "date": m.group(1), "excerpt": excerpt, "thumb": thumb,
+    posts.append({"slug": f.stem, "title": title, "date": m.group(1), "excerpt": excerpt, "thumb": explicit or thumb,
                   "hidden": any(w in f.stem.lower() for w in HIDDEN_WORDS)})
 
 posts.sort(key=lambda p: p["slug"], reverse=True)   # 新しい順

@@ -1,7 +1,8 @@
 /* ★ ブログ名・ロゴ・ホームはここで変更
    home … ホームのURL（https://〜）。入れると、ロゴを押したときそこへ飛ぶ。空ならロゴは記事一覧へ
-   logo … ロゴ画像のパス。画像が無いときはブログ名の文字が出る */
-const SITE={name:"雑記帳",home:"https://example.com/home.html",logo:"images/logo.png"};
+   logo … ロゴ画像のパス。画像が無いときはブログ名の文字が出る
+   thumb … サムネ未設定の記事に使う画像（images/default.jpg）。画像が無いときは🍁が出る */
+const SITE={name:"雑記帳",home:"https://example.com/home.html",logo:"images/logo.png",thumb:"images/default.jpg"};
 const esc=s=>s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 const ytId=u=>{const m=u.match(/(?:[?&]v=|youtu\.be\/|embed\/|shorts\/|live\/)([\w-]{11})/);return m&&m[1]};
 const fmt=d=>d.replace(/-/g,".");
@@ -24,7 +25,7 @@ function md(src){
   for(const raw of src.split(/\r?\n/)){
     const l=raw.trim();let m;
     if(!l){fp();fl();continue}
-    if(/^#(?!#)\s*\S/.test(l))continue;                                   // 先頭の「# タイトル」は別で表示
+    if(/^#(?!#)\s*\S/.test(l)||/^(thumb|サムネ)\s*[:：]/i.test(l))continue;                                   // 先頭の「# タイトル」は別で表示
     if(m=l.match(/^!\[(.*?)\]\((.+?)\)$/)){fp();fl();
       out.push(`<figure><img src="${esc(m[2])}" alt="${esc(m[1])}" loading="lazy">${m[1]?`<figcaption>${esc(m[1])}</figcaption>`:""}</figure>`);continue}
     if(/^https?:\/\/\S+$/.test(l)){fp();fl();const id=ytId(l);                 // 単独行のURL
