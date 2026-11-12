@@ -25,7 +25,7 @@ function md(src){
   for(const raw of src.split(/\r?\n/)){
     const l=raw.trim();let m;
     if(!l){fp();fl();continue}
-    if(/^#(?!#)\s*\S/.test(l)||/^(thumb|サムネ)\s*[:：]/i.test(l))continue;                                   // 先頭の「# タイトル」は別で表示
+    if(/^#(?!#)\s*\S/.test(l)||/^(thumb|サムネ|tags?|タグ)\s*[:：]/i.test(l))continue;                                   // 先頭の「# タイトル」は別で表示
     if(m=l.match(/^!\[(.*?)\]\((.+?)\)$/)){fp();fl();
       out.push(`<figure><img src="${esc(m[2])}" alt="${esc(m[1])}" loading="lazy">${m[1]?`<figcaption>${esc(m[1])}</figcaption>`:""}</figure>`);continue}
     if(/^https?:\/\/\S+$/.test(l)){fp();fl();const id=ytId(l);                 // 単独行のURL

@@ -6,7 +6,7 @@
 <title>雑記帳</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&family=Klee+One:wght@400;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="blog.css?v=5">
+<link rel="stylesheet" href="blog.css?v=6">
 </head>
 <body>
 <div class="leaves" id="leaves" aria-hidden="true"></div>
@@ -14,11 +14,12 @@
   <section><div class="wrap wide">
     <h2 class="sec" data-en="Journal">雑記</h2>
     <input class="search" id="q" type="search" placeholder="記事を検索" aria-label="記事を検索" autocomplete="off">
+    <div class="tags" id="tags" aria-label="タグ"></div>
     <div class="contents" id="list"></div>
     <nav class="pager" id="pager" aria-label="ページ送り"></nav>
   </div></section>
 </main>
-<script src="blog.js?v=5"></script>
+<script src="blog.js?v=6"></script>
 <script>
 chrome(true);
 const box=document.getElementById("list");
@@ -45,10 +46,21 @@ const PER=13, pager=document.getElementById("pager");   // 1ページに13件（
 const norm=s=>s.toLowerCase();
 const nameOf=p=>p.slug.replace(/^\d{4}-\d{2}-\d{2}-?/,"");   // ファイル名の日付より後ろ
 const pageNo=()=>{const m=location.hash.match(/^#p(\d+)$/);return m?+m[1]:1};
-const card=(p,big)=>`<a class="note${big?" big":""}" href="post.html?p=${encodeURIComponent(p.slug)}">
+const tagsEl=document.getElementById("tags");
+const TAG=(new URLSearchParams(location.search).get("tag")||"").trim();   // ?tag=日常 でタグ別表示
+const tagHref=t=>`index.html?tag=${encodeURIComponent(t)}`;
+const hasTag=p=>!TAG||(p.tags||[]).some(t=>norm(t)===norm(TAG));
+function tagsBar(){
+  const cnt={};ALL.filter(p=>!p.hidden).forEach(p=>(p.tags||[]).forEach(t=>cnt[t]=(cnt[t]||0)+1));
+  const ks=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]||a.localeCompare(b,"ja"));
+  tagsEl.innerHTML=ks.length?`<a class="tg${TAG?"":" on"}" href="index.html">すべて</a>`+ks.map(t=>`<a class="tg${norm(t)===norm(TAG)?" on":""}" href="${tagHref(t)}">#${esc(t)}<small>${cnt[t]}</small></a>`).join(""):"";
+}
+const card=(p,big)=>{
+  const ts=(p.tags||[]).slice(0,3).map(t=>`<a class="tg" href="${tagHref(t)}">#${esc(t)}</a>`).join("");
+  return `<article class="note${big?" big":""}">
   <div class="mt"><time>${fmt(p.date)}</time><span>No.${noOf(ALL,p)}</span></div>
   <div class="ph">${(p.thumb||SITE.thumb)?`<img src="${esc(p.thumb||SITE.thumb)}" alt="" loading="lazy" onerror="if(this.dataset.f){this.parentNode.textContent='🍁'}else{this.dataset.f=1;this.src=SITE.thumb}">`:"🍁"}</div>
-  <h3>${esc(p.title)}</h3><p>${esc(p.excerpt)}</p></a>`;
+  <h3><a href="post.html?p=${encodeURIComponent(p.slug)}">${esc(p.title)}</a></h3><p>${esc(p.excerpt)}</p>${ts?`<div class="tgs">${ts}</div>`:""}</article>`};
 function pagerHtml(pg,n){
   const a=(i,t)=>`<a href="#p${i}">${t}</a>`;
   let h=pg>1?a(pg-1,"← 新しい記事"):'<span class="dis">← 新しい記事</span>',last=0;
@@ -59,14 +71,14 @@ function pagerHtml(pg,n){
 function draw(){
   const q=norm(document.getElementById("q").value.trim());
   // 検索していないときは hidden の記事を出さない。検索したときは、題名・冒頭・ファイル名に一致したものだけ出す
-  const all=ALL.filter(p=>q?norm(p.title+" "+p.excerpt+" "+nameOf(p)).includes(q):!p.hidden);
-  if(!all.length){box.innerHTML=`<p class="empty" style="grid-column:1/-1">${q?"見つかりませんでした。":"まだ記事がありません。"}</p>`;pager.innerHTML="";return}
+  const all=ALL.filter(p=>hasTag(p)&&(q?norm(p.title+" "+p.excerpt+" "+nameOf(p)+" "+(p.tags||[]).join(" ")).includes(q):!p.hidden));
+  if(!all.length){box.innerHTML=`<p class="empty" style="grid-column:1/-1">${q?"見つかりませんでした。":TAG?"このタグの記事はまだありません。":"まだ記事がありません。"}</p>`;pager.innerHTML="";return}
   const n=Math.ceil(all.length/PER), pg=Math.min(Math.max(pageNo(),1),n);
   box.innerHTML=all.slice((pg-1)*PER,pg*PER).map((p,i)=>card(p,i===0)).join("");   // 新しい順。先頭の1件だけ大きく
   pager.innerHTML=n>1?pagerHtml(pg,n):"";
   if(first){first=false;reveal([document.querySelector("h2.sec"),...box.querySelectorAll(".note")])}
 }
-getPosts().then(ps=>{ALL=ps;draw();
+getPosts().then(ps=>{ALL=ps;tagsBar();draw();
   document.getElementById("q").addEventListener("input",()=>{if(location.hash)history.replaceState(null,"",location.pathname+location.search);draw()});
   addEventListener("hashchange",()=>{draw();scrollTo({top:0,behavior:"smooth"})});
 }).catch(()=>{box.innerHTML='<p class="empty">記事一覧（posts.json）を読み込めませんでした。make_posts.py を実行したか確認してください。</p>'});
