@@ -19,7 +19,7 @@
     <nav class="pager" id="pager" aria-label="ページ送り"></nav>
   </div></section>
 </main>
-<script src="blog.js?v=45fe03d9"></script>
+<script src="blog.js?v=0d308cd1"></script>
 <script>
 chrome(true);
 const box=document.getElementById("list");
@@ -62,7 +62,7 @@ const card=(p,big)=>{
   return `<article class="note${big?" big":""}">
   <div class="mt"><time>${fmt(p.date)}</time>${ts}</div>
   <div class="ph">${(p.thumb||SITE.thumb)?`<img src="${esc(p.thumb||SITE.thumb)}" alt="" loading="lazy" onerror="if(this.dataset.f){this.parentNode.textContent='🍁'}else{this.dataset.f=1;this.src=SITE.thumb}">`:"🍁"}</div>
-  <h3><a href="post.html?p=${encodeURIComponent(p.slug)}">${esc(p.title)}</a></h3><p>${esc(p.excerpt)}</p>
+  <h3><a href="post.html?p=${encodeURIComponent(p.slug)}">${esc(p.title)}</a></h3>${p.excerpt?`<p>${esc(p.excerpt)}</p>`:""}
   <div class="ft">${au?`<span class="au">${avatar(au,AUTH)}<span class="nm">${esc(au)}</span></span>`:""}<span class="no">No.${noOf(ALL,p)}</span></div></article>`};
 function pagerHtml(pg,n){
   const a=(i,t)=>`<a href="#p${i}">${t}</a>`;

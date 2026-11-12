@@ -41,14 +41,16 @@ for f in sorted((root / "posts").glob("*.md")):
         if au:
             author = au.group(1).strip()
             continue
+        sm = re.match(r"(?:summary|概要)\s*[:：]\s*(.+)$", l, re.I)        # 「概要: 一覧に出す文章」で一覧に出す文章を指定（無ければ何も出さない）
+        if sm:
+            excerpt = excerpt or sm.group(1).strip()
+            continue
         img = re.match(r"!\[.*?\]\((.+?)\)$", l)
         yt = re.search(r"(?:[?&]v=|youtu\.be/|embed/|shorts/|live/)([\w-]{11})", l) if re.match(r"https?://\S+$", l) else None
         if img and not thumb:
             thumb = img.group(1)
         elif yt and not thumb:
             thumb = f"https://i.ytimg.com/vi/{yt.group(1)}/hqdefault.jpg"
-        elif not excerpt and not img and not yt and not re.match(r"(#|[-*>] |https?://)", l):
-            excerpt = re.sub(r"[*\[\]]|\(https?:[^)]*\)", "", l)[:120]
     title = title or f.stem[len(m.group(0)):] or f.stem   # 題名が無いときはファイル名の日付より後ろを使う
     posts.append({"slug": f.stem, "title": title, "date": m.group(1), "excerpt": excerpt, "thumb": explicit or thumb, "tags": tags, "author": author, "v": digest(f.read_bytes()),
                   "hidden": any(w in f.stem.lower() for w in HIDDEN_WORDS)})
