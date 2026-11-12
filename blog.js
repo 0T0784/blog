@@ -1,5 +1,7 @@
-/* ★ ブログ名・メニューはここで変更。home に別サイト（ホーム）のURLを入れると「ホーム」リンクが出る */
-const SITE={name:"雑記帳",home:""};
+/* ★ ブログ名・ロゴ・ホームはここで変更
+   home … ホームのURL（https://〜）。入れると、ロゴと「ホーム」メニューがそこへ飛ぶ。空ならロゴは記事一覧へ
+   logo … ロゴ画像のパス。画像が無いときはブログ名の文字が出る */
+const SITE={name:"雑記帳",home:"https://example.com/home.html",logo:"images/logo.png"};
 const esc=s=>s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 const ytId=u=>{const m=u.match(/(?:[?&]v=|youtu\.be\/|embed\/|shorts\/|live\/)([\w-]{11})/);return m&&m[1]};
 const fmt=d=>d.replace(/-/g,".");
@@ -7,7 +9,7 @@ const fmt=d=>d.replace(/-/g,".");
 // 共通ヘッダー／フッター
 function chrome(cur){
   document.body.insertAdjacentHTML("afterbegin",
-   `<header><nav class="nav" aria-label="メニュー"><a class="logo" href="index.html">${SITE.name}</a>
+   `<header><nav class="nav" aria-label="メニュー"><a class="logo" href="${SITE.home||"index.html"}" aria-label="${SITE.home?"ホームへ":"記事一覧へ"}"><img src="${SITE.logo}" alt="" onerror="this.parentNode.textContent=SITE.name"></a>
     <ul>${SITE.home?`<li><a href="${SITE.home}">ホーム</a></li>`:""}<li><a href="index.html" class="${cur?"on":""}">雑記</a></li></ul></nav></header>`);
   document.body.insertAdjacentHTML("beforeend",`<footer>© ${SITE.name}</footer>`);
 }

@@ -9,7 +9,8 @@ a{color:var(--maple)}
 
 header{position:sticky;top:0;z-index:10;background:#fbf3e6e8;backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
 .nav{max-width:1200px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;gap:clamp(14px,3vw,40px)}
-.logo{font-weight:700;color:var(--deep);text-decoration:none;letter-spacing:.12em}
+.logo{display:flex;align-items:center;min-width:56px;font-weight:700;color:var(--deep);text-decoration:none;letter-spacing:.12em}
+.logo img{height:52px;width:auto;display:block}
 .nav ul{display:flex;gap:clamp(12px,3vw,38px);list-style:none;margin:0;padding:0}
 .nav li a{color:var(--ink);text-decoration:none;font-weight:600;letter-spacing:.14em;padding:6px 2px;border-bottom:2px solid transparent}
 .nav li a:hover,.nav li a.on{border-color:var(--maple)}
