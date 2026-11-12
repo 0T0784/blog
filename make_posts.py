@@ -2,9 +2,12 @@
   python make_posts.py
 ファイル名: 2026-11-12-好きな名前.md （先頭の日付が記事の日付になる）
 """
-import json, re, pathlib
+import hashlib, json, re, pathlib
 
 root = pathlib.Path(__file__).parent
+
+def digest(b):   # 中身が変わると変わる短い印（ブラウザの古いキャッシュを避けるために使う）
+    return hashlib.md5(b).hexdigest()[:8]
 # ファイル名にこの言葉が入っている記事は、一覧には出さず「検索したときだけ」表示する（大文字小文字は区別しない）
 HIDDEN_WORDS = ["test", "private"]
 posts = []
@@ -47,9 +50,21 @@ for f in sorted((root / "posts").glob("*.md")):
         elif not excerpt and not img and not yt and not re.match(r"(#|[-*>] |https?://)", l):
             excerpt = re.sub(r"[*\[\]]|\(https?:[^)]*\)", "", l)[:120]
     title = title or f.stem[len(m.group(0)):] or f.stem   # 題名が無いときはファイル名の日付より後ろを使う
-    posts.append({"slug": f.stem, "title": title, "date": m.group(1), "excerpt": excerpt, "thumb": explicit or thumb, "tags": tags, "author": author,
+    posts.append({"slug": f.stem, "title": title, "date": m.group(1), "excerpt": excerpt, "thumb": explicit or thumb, "tags": tags, "author": author, "v": digest(f.read_bytes()),
                   "hidden": any(w in f.stem.lower() for w in HIDDEN_WORDS)})
 
 posts.sort(key=lambda p: p["slug"], reverse=True)   # 新しい順
 (root / "posts.json").write_text(json.dumps({"posts": posts}, ensure_ascii=False, indent=1), encoding="utf-8")
 print(f"{len(posts)}件の記事で posts.json を作りました")
+
+# CSS/JS の読み込みURLに、中身の印（?v=）を自動でつける → 更新したら必ず新しいものが読み込まれる
+for page in ("index.html", "post.html"):
+    p = root / page
+    if not p.exists():
+        continue
+    s = p.read_text(encoding="utf-8")
+    for asset in ("blog.css", "blog.js"):
+        a = root / asset
+        if a.exists():
+            s = re.sub(re.escape(asset) + r'(\?v=[^"\']*)?(?=["\'])', f"{asset}?v={digest(a.read_bytes())}", s)
+    p.write_text(s, encoding="utf-8")

@@ -6,7 +6,7 @@
 <title>雑記帳</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&family=Klee+One:wght@400;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="blog.css?v=8">
+<link rel="stylesheet" href="blog.css?v=d849361d">
 </head>
 <body>
 <div class="leaves" id="leaves" aria-hidden="true"></div>
@@ -19,7 +19,7 @@
     <nav class="pager" id="pager" aria-label="ページ送り"></nav>
   </div></section>
 </main>
-<script src="blog.js?v=8"></script>
+<script src="blog.js?v=45fe03d9"></script>
 <script>
 chrome(true);
 const box=document.getElementById("list");
@@ -77,7 +77,9 @@ function draw(){
   const all=ALL.filter(p=>hasTag(p)&&(q?norm(p.title+" "+p.excerpt+" "+nameOf(p)+" "+(p.tags||[]).join(" ")+" "+authorOf(p)).includes(q):!p.hidden));
   if(!all.length){box.innerHTML=`<p class="empty" style="grid-column:1/-1">${q?"見つかりませんでした。":TAG?"このタグの記事はまだありません。":"まだ記事がありません。"}</p>`;pager.innerHTML="";return}
   const n=Math.ceil(all.length/PER), pg=Math.min(Math.max(pageNo(),1),n);
-  box.innerHTML=all.slice((pg-1)*PER,pg*PER).map((p,i)=>card(p,i===0)).join("");   // 新しい順。先頭の1件だけ大きく
+  const cur=all.slice((pg-1)*PER,pg*PER);
+  box.className="contents"+(cur.length<4?" few":"");   // 3件以下は大きいカードを縦に伸ばさない
+  box.innerHTML=cur.map((p,i)=>card(p,i===0)).join("");   // 新しい順。先頭の1件だけ大きく
   pager.innerHTML=n>1?pagerHtml(pg,n):"";
   if(first){first=false;reveal([document.querySelector("h2.sec"),...box.querySelectorAll(".note")])}
 }
