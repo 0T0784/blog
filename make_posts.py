@@ -5,6 +5,8 @@
 import json, re, pathlib
 
 root = pathlib.Path(__file__).parent
+# ファイル名にこの言葉が入っている記事は、一覧には出さず「検索したときだけ」表示する（大文字小文字は区別しない）
+HIDDEN_WORDS = ["test", "private"]
 posts = []
 for f in sorted((root / "posts").glob("*.md")):
     m = re.match(r"(\d{4}-\d{2}-\d{2})-", f.stem)
@@ -30,7 +32,8 @@ for f in sorted((root / "posts").glob("*.md")):
         elif not excerpt and not img and not yt and not re.match(r"(#|[-*>] |https?://)", l):
             excerpt = re.sub(r"[*\[\]]|\(https?:[^)]*\)", "", l)[:80]
     title = title or f.stem[len(m.group(0)):] or f.stem   # 題名が無いときはファイル名の日付より後ろを使う
-    posts.append({"slug": f.stem, "title": title, "date": m.group(1), "excerpt": excerpt, "thumb": thumb})
+    posts.append({"slug": f.stem, "title": title, "date": m.group(1), "excerpt": excerpt, "thumb": thumb,
+                  "hidden": any(w in f.stem.lower() for w in HIDDEN_WORDS)})
 
 posts.sort(key=lambda p: p["slug"], reverse=True)   # 新しい順
 (root / "posts.json").write_text(json.dumps({"posts": posts}, ensure_ascii=False, indent=1), encoding="utf-8")

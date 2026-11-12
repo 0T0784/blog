@@ -18,12 +18,13 @@ chrome(true);
   try{
     if(!slug||/[/\\.]/.test(slug))throw 0;
     const [ps,src]=await Promise.all([getPosts(),fetch(`posts/${encodeURIComponent(slug)}.md`).then(r=>{if(!r.ok)throw 0;return r.text()})]);
-    const i=ps.findIndex(p=>p.slug===slug), me=ps[i];
+    const vis=ps.filter(p=>!p.hidden||p.slug===slug);   // 前後リンクには hidden の記事を出さない
+    const i=vis.findIndex(p=>p.slug===slug), me=vis[i];
     document.title=`${me.title} | ${SITE.name}`;
     const nb=(p,t)=>p?`<a href="post.html?p=${encodeURIComponent(p.slug)}">${t}</a>`:"<span></span>";
     box.innerHTML=`<div class="meta"><time>${fmt(me.date)}</time></div><h1>${esc(me.title)}</h1>
       <div class="body">${md(src)}</div>
-      <div class="pn">${nb(ps[i+1],"← "+(ps[i+1]?esc(ps[i+1].title):""))}${nb(ps[i-1],(ps[i-1]?esc(ps[i-1].title):"")+" →")}</div>
+      <div class="pn">${nb(vis[i+1],"← "+(vis[i+1]?esc(vis[i+1].title):""))}${nb(vis[i-1],(vis[i-1]?esc(vis[i-1].title):"")+" →")}</div>
       <p class="back"><a class="btn" href="index.html">記事一覧へ</a></p>`;
   }catch(e){box.innerHTML='<p class="empty">記事が見つかりませんでした。</p><p class="back"><a class="btn" href="index.html">記事一覧へ</a></p>'}
 })();

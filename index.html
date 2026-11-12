@@ -13,6 +13,7 @@
 <main>
   <section><div class="wrap wide">
     <h2 class="sec" data-en="Journal">雑記</h2>
+    <input class="search" id="q" type="search" placeholder="記事を検索" aria-label="記事を検索" autocomplete="off">
     <div class="contents" id="list"></div>
   </div></section>
 </main>
@@ -38,14 +39,22 @@ function reveal(els){
   els.forEach(e=>io.observe(e));
 }
 
-getPosts().then(ps=>{
-  if(!ps.length){box.innerHTML='<p class="empty">まだ記事がありません。</p>';return}
+let ALL=[],first=true;
+const norm=s=>s.toLowerCase();
+const nameOf=p=>p.slug.replace(/^\d{4}-\d{2}-\d{2}-?/,"");   // ファイル名の日付より後ろ
+function draw(){
+  const q=norm(document.getElementById("q").value.trim());
+  // 検索していないときは hidden の記事を出さない。検索したときは、題名・冒頭・ファイル名に一致したものだけ出す
+  const ps=ALL.filter(p=>q?norm(p.title+" "+p.excerpt+" "+nameOf(p)).includes(q):!p.hidden);
+  if(!ps.length){box.innerHTML=`<p class="empty" style="grid-column:1/-1">${q?"見つかりませんでした。":"まだ記事がありません。"}</p>`;return}
   box.innerHTML=ps.map(p=>`<a class="play" href="post.html?p=${encodeURIComponent(p.slug)}"><div>
     <div class="th">${p.thumb?`<img src="${esc(p.thumb)}" alt="" loading="lazy" onerror="this.parentNode.textContent='🍁'">`:"🍁"}</div>
     <time>${fmt(p.date)}</time><h3>${esc(p.title)}</h3><p>${esc(p.excerpt)}</p>
     <span class="btn">読む</span></div></a>`).join("");
-  reveal([document.querySelector("h2.sec"),...box.querySelectorAll(".play")]);
-}).catch(()=>{box.innerHTML='<p class="empty">記事一覧（posts.json）を読み込めませんでした。make_posts.py を実行したか確認してください。</p>'});
+  if(first){first=false;reveal([document.querySelector("h2.sec"),...box.querySelectorAll(".play")])}
+}
+getPosts().then(ps=>{ALL=ps;draw();document.getElementById("q").addEventListener("input",draw)})
+.catch(()=>{box.innerHTML='<p class="empty">記事一覧（posts.json）を読み込めませんでした。make_posts.py を実行したか確認してください。</p>'});
 </script>
 </body>
 </html>
