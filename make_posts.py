@@ -14,7 +14,7 @@ for f in sorted((root / "posts").glob("*.md")):
         print(f"スキップ: {f.name}（ファイル名を 2026-11-12-名前.md の形にしてね）")
         continue
     text = f.read_text(encoding="utf-8-sig")   # Windowsのメモ帳が付けるBOMも許容
-    title, excerpt, thumb, explicit, tags = "", "", "", "", []
+    title, excerpt, thumb, explicit, tags, author = "", "", "", "", [], ""
     for line in text.splitlines():
         l = line.strip()
         if not l:
@@ -34,6 +34,10 @@ for f in sorted((root / "posts").glob("*.md")):
                 if t and t not in tags:
                     tags.append(t)
             continue
+        au = re.match(r"(?:authors?|著者)\s*[:：]\s*(.+)$", l, re.I)       # 「著者: 名前」で著者を指定（アイコンは authors.json で関連付け）
+        if au:
+            author = au.group(1).strip()
+            continue
         img = re.match(r"!\[.*?\]\((.+?)\)$", l)
         yt = re.search(r"(?:[?&]v=|youtu\.be/|embed/|shorts/|live/)([\w-]{11})", l) if re.match(r"https?://\S+$", l) else None
         if img and not thumb:
@@ -43,7 +47,7 @@ for f in sorted((root / "posts").glob("*.md")):
         elif not excerpt and not img and not yt and not re.match(r"(#|[-*>] |https?://)", l):
             excerpt = re.sub(r"[*\[\]]|\(https?:[^)]*\)", "", l)[:120]
     title = title or f.stem[len(m.group(0)):] or f.stem   # 題名が無いときはファイル名の日付より後ろを使う
-    posts.append({"slug": f.stem, "title": title, "date": m.group(1), "excerpt": excerpt, "thumb": explicit or thumb, "tags": tags,
+    posts.append({"slug": f.stem, "title": title, "date": m.group(1), "excerpt": excerpt, "thumb": explicit or thumb, "tags": tags, "author": author,
                   "hidden": any(w in f.stem.lower() for w in HIDDEN_WORDS)})
 
 posts.sort(key=lambda p: p["slug"], reverse=True)   # 新しい順

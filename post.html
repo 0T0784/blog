@@ -6,24 +6,26 @@
 <title>雑記帳</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&family=Klee+One:wght@400;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="blog.css?v=6">
+<link rel="stylesheet" href="blog.css?v=7">
 </head>
 <body>
 <main class="wrap"><div id="post"><p class="empty">読み込み中…</p></div></main>
-<script src="blog.js?v=6"></script>
+<script src="blog.js?v=7"></script>
 <script>
 chrome(true);
 (async()=>{
   const slug=new URLSearchParams(location.search).get("p")||"", box=document.getElementById("post");
   try{
     if(!slug||/[/\\.]/.test(slug))throw 0;
-    const [ps,src]=await Promise.all([getPosts(),fetch(`posts/${encodeURIComponent(slug)}.md`).then(r=>{if(!r.ok)throw 0;return r.text()})]);
+    const [ps,auth,src]=await Promise.all([getPosts(),getAuthors(),fetch(`posts/${encodeURIComponent(slug)}.md`).then(r=>{if(!r.ok)throw 0;return r.text()})]);
     const vis=ps.filter(p=>!p.hidden||p.slug===slug);   // 前後リンクには hidden の記事を出さない
     const i=vis.findIndex(p=>p.slug===slug), me=vis[i];
     document.title=`${me.title} | ${SITE.name}`;
     const nb=(p,t)=>p?`<a href="post.html?p=${encodeURIComponent(p.slug)}">${t}</a>`:"<span></span>";
     const no=noOf(ps,me);
-    box.innerHTML=`<article class="sheet"><header><p class="label">${fmt(me.date)} ・ ${no}</p><h1>${esc(me.title)}</h1>${(me.tags||[]).length?`<div class="tgs">${me.tags.map(t=>`<a class="tg" href="index.html?tag=${encodeURIComponent(t)}">#${esc(t)}</a>`).join("")}</div>`:""}</header>
+    const tg=me.tags||[], au=authorOf(me);
+    box.innerHTML=`<article class="sheet"><header><div class="lb"><p class="label">${fmt(me.date)} ・ ${no}</p>${tg.length?`<div class="tgs">${tg.map(t=>`<a class="tg" href="index.html?tag=${encodeURIComponent(t)}">#${esc(t)}</a>`).join("")}</div>`:""}</div>
+      <h1>${esc(me.title)}</h1>${au?`<div class="au">${avatar(au,auth)}<span>${esc(au)}</span></div>`:""}</header>
       <div class="body">${md(src)}</div></article>
       <div class="pn">${nb(vis[i+1],"← "+(vis[i+1]?esc(vis[i+1].title):""))}${nb(vis[i-1],(vis[i-1]?esc(vis[i-1].title):"")+" →")}</div>
       <p class="back"><a class="btn" href="index.html">記事一覧へ</a></p>`;

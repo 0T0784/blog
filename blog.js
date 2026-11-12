@@ -1,8 +1,9 @@
 /* ★ ブログ名・ロゴ・ホームはここで変更
    home … ホームのURL（https://〜）。入れると、ロゴを押したときそこへ飛ぶ。空ならロゴは記事一覧へ
    logo … ロゴ画像のパス。画像が無いときはブログ名の文字が出る
-   thumb … サムネ未設定の記事に使う画像（images/default.jpg）。画像が無いときは🍁が出る */
-const SITE={name:"雑記帳",home:"https://example.com/home.html",logo:"images/logo.png",thumb:"images/default.jpg"};
+   thumb … サムネ未設定の記事に使う画像（images/default.jpg）。画像が無いときは🍁が出る
+   author … 著者を書いていない記事に使う著者名（空なら表示しない）。アイコンは authors.json で関連付ける */
+const SITE={name:"雑記帳",home:"https://example.com/home.html",logo:"images/logo.png",thumb:"images/default.jpg",author:""};
 const esc=s=>s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 const ytId=u=>{const m=u.match(/(?:[?&]v=|youtu\.be\/|embed\/|shorts\/|live\/)([\w-]{11})/);return m&&m[1]};
 const fmt=d=>d.replace(/-/g,".");
@@ -25,7 +26,7 @@ function md(src){
   for(const raw of src.split(/\r?\n/)){
     const l=raw.trim();let m;
     if(!l){fp();fl();continue}
-    if(/^#(?!#)\s*\S/.test(l)||/^(thumb|サムネ|tags?|タグ)\s*[:：]/i.test(l))continue;                                   // 先頭の「# タイトル」は別で表示
+    if(/^#(?!#)\s*\S/.test(l)||/^(thumb|サムネ|tags?|タグ|authors?|著者)\s*[:：]/i.test(l))continue;                                   // 先頭の「# タイトル」は別で表示
     if(m=l.match(/^!\[(.*?)\]\((.+?)\)$/)){fp();fl();
       out.push(`<figure><img src="${esc(m[2])}" alt="${esc(m[1])}" loading="lazy">${m[1]?`<figcaption>${esc(m[1])}</figcaption>`:""}</figure>`);continue}
     if(/^https?:\/\/\S+$/.test(l)){fp();fl();const id=ytId(l);                 // 単独行のURL
@@ -42,3 +43,11 @@ const getPosts=()=>fetch("posts.json",{cache:"no-store"}).then(r=>r.json()).then
 
 // 記事番号（古い記事から数えた番号。一覧に出ない記事は、その記事自身のページでだけ数に入れる）
 const noOf=(ps,p)=>{const v=ps.filter(x=>!x.hidden||x.slug===p.slug);return String(v.length-v.findIndex(x=>x.slug===p.slug)).padStart(2,"0")};
+
+// 著者とアイコン（authors.json の { "名前": "アイコン画像のパス" }）
+const getAuthors=()=>fetch("authors.json",{cache:"no-store"}).then(r=>r.ok?r.json():{}).catch(()=>({}));
+const authorOf=p=>p.author||SITE.author||"";
+const avatar=(name,auth)=>{
+  const src=auth&&auth[name], ini=esc([...name][0]||"?");
+  return `<span class="av">${src?`<img src="${esc(src)}" alt="" data-i="${ini}" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('b'),{textContent:this.dataset.i}))">`:`<b>${ini}</b>`}</span>`;
+};

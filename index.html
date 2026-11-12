@@ -6,7 +6,7 @@
 <title>雑記帳</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&family=Klee+One:wght@400;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="blog.css?v=6">
+<link rel="stylesheet" href="blog.css?v=7">
 </head>
 <body>
 <div class="leaves" id="leaves" aria-hidden="true"></div>
@@ -19,7 +19,7 @@
     <nav class="pager" id="pager" aria-label="ページ送り"></nav>
   </div></section>
 </main>
-<script src="blog.js?v=6"></script>
+<script src="blog.js?v=7"></script>
 <script>
 chrome(true);
 const box=document.getElementById("list");
@@ -41,7 +41,7 @@ function reveal(els){
   els.forEach(e=>io.observe(e));
 }
 
-let ALL=[],first=true;
+let ALL=[],AUTH={},first=true;
 const PER=13, pager=document.getElementById("pager");   // 1ページに13件（大1＋4＋4＋4）
 const norm=s=>s.toLowerCase();
 const nameOf=p=>p.slug.replace(/^\d{4}-\d{2}-\d{2}-?/,"");   // ファイル名の日付より後ろ
@@ -56,11 +56,14 @@ function tagsBar(){
   tagsEl.innerHTML=ks.length?`<a class="tg${TAG?"":" on"}" href="index.html">すべて</a>`+ks.map(t=>`<a class="tg${norm(t)===norm(TAG)?" on":""}" href="${tagHref(t)}">#${esc(t)}<small>${cnt[t]}</small></a>`).join(""):"";
 }
 const card=(p,big)=>{
-  const ts=(p.tags||[]).slice(0,3).map(t=>`<a class="tg" href="${tagHref(t)}">#${esc(t)}</a>`).join("");
+  const tg=p.tags||[], k=big?4:2;   // 日付の横に出すタグは、小さいカードで2つ、大きいカードで4つまで
+  const ts=tg.slice(0,k).map(t=>`<a class="tg" href="${tagHref(t)}">#${esc(t)}</a>`).join("")+(tg.length>k?`<span class="more">+${tg.length-k}</span>`:"");
+  const au=authorOf(p);
   return `<article class="note${big?" big":""}">
-  <div class="mt"><time>${fmt(p.date)}</time><span>No.${noOf(ALL,p)}</span></div>
+  <div class="mt"><time>${fmt(p.date)}</time>${ts}</div>
   <div class="ph">${(p.thumb||SITE.thumb)?`<img src="${esc(p.thumb||SITE.thumb)}" alt="" loading="lazy" onerror="if(this.dataset.f){this.parentNode.textContent='🍁'}else{this.dataset.f=1;this.src=SITE.thumb}">`:"🍁"}</div>
-  <h3><a href="post.html?p=${encodeURIComponent(p.slug)}">${esc(p.title)}</a></h3><p>${esc(p.excerpt)}</p>${ts?`<div class="tgs">${ts}</div>`:""}</article>`};
+  <h3><a href="post.html?p=${encodeURIComponent(p.slug)}">${esc(p.title)}</a></h3><p>${esc(p.excerpt)}</p>
+  <div class="ft">${au?`<span class="au">${avatar(au,AUTH)}<span class="nm">${esc(au)}</span></span>`:""}<span class="no">No.${noOf(ALL,p)}</span></div></article>`};
 function pagerHtml(pg,n){
   const a=(i,t)=>`<a href="#p${i}">${t}</a>`;
   let h=pg>1?a(pg-1,"← 新しい記事"):'<span class="dis">← 新しい記事</span>',last=0;
@@ -71,14 +74,14 @@ function pagerHtml(pg,n){
 function draw(){
   const q=norm(document.getElementById("q").value.trim());
   // 検索していないときは hidden の記事を出さない。検索したときは、題名・冒頭・ファイル名に一致したものだけ出す
-  const all=ALL.filter(p=>hasTag(p)&&(q?norm(p.title+" "+p.excerpt+" "+nameOf(p)+" "+(p.tags||[]).join(" ")).includes(q):!p.hidden));
+  const all=ALL.filter(p=>hasTag(p)&&(q?norm(p.title+" "+p.excerpt+" "+nameOf(p)+" "+(p.tags||[]).join(" ")+" "+authorOf(p)).includes(q):!p.hidden));
   if(!all.length){box.innerHTML=`<p class="empty" style="grid-column:1/-1">${q?"見つかりませんでした。":TAG?"このタグの記事はまだありません。":"まだ記事がありません。"}</p>`;pager.innerHTML="";return}
   const n=Math.ceil(all.length/PER), pg=Math.min(Math.max(pageNo(),1),n);
   box.innerHTML=all.slice((pg-1)*PER,pg*PER).map((p,i)=>card(p,i===0)).join("");   // 新しい順。先頭の1件だけ大きく
   pager.innerHTML=n>1?pagerHtml(pg,n):"";
   if(first){first=false;reveal([document.querySelector("h2.sec"),...box.querySelectorAll(".note")])}
 }
-getPosts().then(ps=>{ALL=ps;tagsBar();draw();
+Promise.all([getPosts(),getAuthors()]).then(([ps,au])=>{ALL=ps;AUTH=au;tagsBar();draw();
   document.getElementById("q").addEventListener("input",()=>{if(location.hash)history.replaceState(null,"",location.pathname+location.search);draw()});
   addEventListener("hashchange",()=>{draw();scrollTo({top:0,behavior:"smooth"})});
 }).catch(()=>{box.innerHTML='<p class="empty">記事一覧（posts.json）を読み込めませんでした。make_posts.py を実行したか確認してください。</p>'});
