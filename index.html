@@ -53,8 +53,8 @@ const tagHref=t=>`index.html?tag=${encodeURIComponent(t)}`;
 const hasTag=p=>!TAG||(p.tags||[]).some(t=>norm(t)===norm(TAG));
 function tagsBar(){
   const cnt={};ALL.filter(p=>!p.hidden).forEach(p=>(p.tags||[]).forEach(t=>cnt[t]=(cnt[t]||0)+1));
-  const last=t=>t==="その他"?1:0;   // 「その他」は件数にかかわらず一番右
-  const ks=Object.keys(cnt).sort((a,b)=>last(a)-last(b)||cnt[b]-cnt[a]||a.localeCompare(b,"ja"));
+  const rank=t=>t==="お知らせ"?-1:t==="その他"?1:0;   // 「お知らせ」は一番左、「その他」は一番右（件数にかかわらず）
+  const ks=Object.keys(cnt).sort((a,b)=>rank(a)-rank(b)||cnt[b]-cnt[a]||a.localeCompare(b,"ja"));
   tagsEl.innerHTML=ks.length?`<a class="tg${TAG?"":" on"}" href="index.html">すべて</a>`+ks.map(t=>`<a class="tg${norm(t)===norm(TAG)?" on":""}" href="${tagHref(t)}">#${esc(t)}<small>${cnt[t]}</small></a>`).join(""):"";
 }
 const card=(p,big)=>{
