@@ -2,17 +2,22 @@
    home … ホームのURL（https://〜）。入れると、ロゴを押したときそこへ飛ぶ。空ならロゴは記事一覧へ
    logo … ロゴ画像のパス。画像が無いときはブログ名の文字が出る
    thumb … サムネ未設定の記事に使う画像（images/default.jpg）。画像が無いときは🍁が出る
+   brand … ロゴ画像が無いときにヘッダーに出す文字（TOPページと同じ名前にする）
+   menu … ヘッダーのメニュー [名前, 行き先]。「#」で始まる行き先は、TOPページ（home）の同じ場所に飛ぶ（home が空なら出ない）
    author … 著者を書いていない記事に使う著者名（空なら表示しない）。アイコンは authors.json で関連付ける */
-const SITE={name:"雑記帳",home:"https://example.com/home.html",logo:"images/logo.png",thumb:"images/default.jpg",author:""};
+const SITE={name:"雑記帳",brand:"オト",home:"https://0t0784.github.io/home/",logo:"images/logo.png",thumb:"images/default.jpg",author:"",
+  menu:[["私について","#about"],["作品・活動","#works"],["雑記","index.html"],["リンク","#links"]]};
 const esc=s=>s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 const ytId=u=>{const m=u.match(/(?:[?&]v=|youtu\.be\/|embed\/|shorts\/|live\/)([\w-]{11})/);return m&&m[1]};
 const fmt=d=>d.replace(/-/g,".");
 
 // 共通ヘッダー／フッター
 function chrome(cur){
+  const H=(SITE.home||"").replace(/#.*$/,"");   // ホームのURL
+  const items=SITE.menu.map(([t,h])=>h[0]==="#"?(H?[t,H+h]:null):[t,h]).filter(Boolean);
   document.body.insertAdjacentHTML("afterbegin",
-   `<header><nav class="nav" aria-label="メニュー"><a class="logo" href="${SITE.home||"index.html"}" aria-label="${SITE.home?"ホームへ":"記事一覧へ"}"><img src="${SITE.logo}" alt="" onerror="this.parentNode.textContent=SITE.name"></a>
-    <ul><li><a href="index.html" class="${cur?"on":""}">雑記</a></li></ul></nav></header>`);
+   `<header><nav class="nav" aria-label="メニュー"><a class="logo" href="${esc(H||"index.html")}" aria-label="${H?"ホームへ":"記事一覧へ"}"><img src="${esc(SITE.logo)}" alt="" onerror="this.parentNode.textContent=SITE.brand"></a>
+    <ul>${items.map(([t,h])=>`<li><a href="${esc(h)}"${cur&&h==="index.html"?' class="on"':""}>${esc(t)}</a></li>`).join("")}</ul></nav></header>`);
   document.body.insertAdjacentHTML("beforeend",`<footer>© ${SITE.name}</footer>`);
 }
 
