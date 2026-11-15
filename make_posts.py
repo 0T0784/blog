@@ -16,6 +16,19 @@ IMG_TAG = re.compile(r"<img\b[^>]*\bsrc=[\"']([^\"']+)[\"']", re.I)             
 IMG_EXT = re.compile(r"\.(png|jpe?g|gif|webp|avif)(\?\S*)?$", re.I)
 ASSET = re.compile(r"https://github\.com/user-attachments/assets/\S+$")
 
+PREVIEW_MAX = 150   # 左上の大きいカードに出す本文の文字数
+DATE_NOTE = re.compile(r"[（(【\[]?\s*\d{4}\s*[/.\-年]\s*\d{1,2}")   # 「2026/11/20 追記」のような日付で始まる行
+
+# 「2026/11/21 追記: …」「【追記】…」のような追記の表記（「追記しました」「更新頻度」のような普通の文は対象外）
+NOTE_RE = re.compile(r"[（(【\[]?(?:\d{4}\s*[/.\-年]\s*\d{1,2}\s*[/.\-月]\s*\d{1,2}日?)?\s*[）)】\]]?\s*[（(【\[]?追記[）)】\]]?(?![ぁ-んァ-ヶ一-龠])")
+NOTICE_MAX = 36
+
+def clean(s):
+    s = re.sub(r"!\[[^\]]*\]\([^)]*\)", "", s)           # 画像を消す
+    s = re.sub(r"\[([^\]]+)\]\([^)]*\)", r"\1", s)        # [文字](URL) → 文字
+    s = re.sub(r"\*\*|__|`", "", s)                        # 太字などの記号
+    return re.sub(r"^[-*]\s+", "", s).strip()
+
 def pick_url(s):
     """「images/a.jpg」「https://…」「![image](https://…)」「<img src=…>」のどれからでもURLを取り出す"""
     m = re.search(r"!\[[^\]]*\]\(([^)\s]+)", s) or IMG_TAG.search(s)
@@ -30,9 +43,11 @@ for f in sorted((root / "posts").glob("*.md")):
         continue
     text = f.read_text(encoding="utf-8-sig")   # Windowsのメモ帳が付けるBOMも許容
     title, excerpt, thumb, explicit, tags, author = "", "", "", "", [], ""
+    body, brk, note = [], False, ""
     for line in text.splitlines():
         l = line.strip()
         if not l:
+            brk = True
             continue
         t = re.match(r"#(?!#)\s*(\S.*)", l)          # 「# 題名」「#題名」どちらもOK（## は見出し扱い）
         if t and not title:
@@ -65,8 +80,26 @@ for f in sorted((root / "posts").glob("*.md")):
             thumb = img.group(1) if img else himg.group(1) if himg else bare
         elif yt and not thumb:
             thumb = f"https://i.ytimg.com/vi/{yt.group(1)}/hqdefault.jpg"
+        if NOTE_RE.match(l):                       # 追記の表記は、いちばん最後（＝新しい）ものを覚えておく
+            note = clean(l)
+        # 本文の文章（見出し・画像・URL・「日付＋追記」の行は除く）を、大きいカード用に集める
+        if img or himg or bare or yt or l.startswith(("#", "<", ">", "|", "```", "---")) or re.match(r"https?://\S+$", l):
+            continue
+        if DATE_NOTE.match(l) or re.search(r"追記|更新", l[:12]):
+            continue
+        txt = clean(l)
+        if txt:
+            body.append((" " if brk and body else "") + txt)
+            brk = False
+    if "追記" in excerpt:                           # 概要に「追記」と書いてあれば、それを優先
+        note = excerpt
+    if len(note) > NOTICE_MAX:
+        note = note[:NOTICE_MAX].rstrip() + "…"
+    preview = "".join(body)
+    if len(preview) > PREVIEW_MAX:
+        preview = preview[:PREVIEW_MAX].rstrip() + "…"
     title = title or f.stem[len(m.group(0)):] or f.stem   # 題名が無いときはファイル名の日付より後ろを使う
-    posts.append({"slug": f.stem, "title": title, "date": m.group(1), "excerpt": excerpt, "thumb": explicit or thumb, "tags": tags, "author": author, "v": digest(f.read_bytes()),
+    posts.append({"slug": f.stem, "title": title, "date": m.group(1), "excerpt": excerpt, "preview": preview, "notice": note, "thumb": explicit or thumb, "tags": tags, "author": author, "v": digest(f.read_bytes()),
                   "hidden": any(w in f.stem.lower() for w in HIDDEN_WORDS)})
 
 posts.sort(key=lambda p: p["slug"], reverse=True)   # 新しい順

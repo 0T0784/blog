@@ -61,10 +61,11 @@ const card=(p,big)=>{
   const tg=p.tags||[], k=big?4:1;   // 日付の横に出すタグは、大きいカード（左上）で4つまで、それ以外は1つだけ
   const ts=tg.slice(0,k).map(t=>`<a class="tg" href="${tagHref(t)}">#${esc(t)}</a>`).join("")+(tg.length>k?`<span class="more">+${tg.length-k}</span>`:"");
   const au=authorOf(p);
+  const txt=big?(p.excerpt||p.preview):(p.notice||"");   // 左上は概要か本文の一部、それ以外は「追記」の表記があるときだけ
   return `<article class="note${big?" big":""}">
   <div class="mt"><time>${fmt(p.date)}</time>${ts}</div>
   <div class="ph">${(p.thumb||SITE.thumb)?`<img src="${esc(p.thumb||SITE.thumb)}" alt="" loading="lazy" onerror="if(this.dataset.f){this.parentNode.textContent='🍁'}else{this.dataset.f=1;this.src=SITE.thumb}">`:"🍁"}</div>
-  <h3><a href="post.html?p=${encodeURIComponent(p.slug)}">${esc(p.title)}</a></h3>${p.excerpt?`<p>${esc(p.excerpt)}</p>`:""}
+  <h3><a href="post.html?p=${encodeURIComponent(p.slug)}">${esc(p.title)}</a></h3>${txt?`<p>${esc(txt)}</p>`:""}
   <div class="ft">${au?`<span class="au">${avatar(au,AUTH)}<span class="nm">${esc(au)}</span></span>`:""}<span class="no">No.${noOf(ALL,p)}</span></div></article>`};
 function pagerHtml(pg,n){
   const a=(i,t)=>`<a href="#p${i}">${t}</a>`;
