@@ -58,7 +58,7 @@ function tagsBar(){
   tagsEl.innerHTML=ks.length?`<a class="tg${TAG?"":" on"}" href="index.html">すべて</a>`+ks.map(t=>`<a class="tg${norm(t)===norm(TAG)?" on":""}" href="${tagHref(t)}">#${esc(t)}<small>${cnt[t]}</small></a>`).join(""):"";
 }
 const card=(p,big)=>{
-  const tg=p.tags||[], k=big?4:2;   // 日付の横に出すタグは、小さいカードで2つ、大きいカードで4つまで
+  const tg=p.tags||[], k=big?4:1;   // 日付の横に出すタグは、大きいカード（左上）で4つまで、それ以外は1つだけ
   const ts=tg.slice(0,k).map(t=>`<a class="tg" href="${tagHref(t)}">#${esc(t)}</a>`).join("")+(tg.length>k?`<span class="more">+${tg.length-k}</span>`:"");
   const au=authorOf(p);
   return `<article class="note${big?" big":""}">
@@ -80,7 +80,6 @@ function draw(){
   if(!all.length){box.innerHTML=`<p class="empty" style="grid-column:1/-1">${q?"見つかりませんでした。":TAG?"このタグの記事はまだありません。":"まだ記事がありません。"}</p>`;pager.innerHTML="";return}
   const n=Math.ceil(all.length/PER), pg=Math.min(Math.max(pageNo(),1),n);
   const cur=all.slice((pg-1)*PER,pg*PER);
-  box.className="contents"+(cur.length<4?" few":"");   // 3件以下は大きいカードを縦に伸ばさない
   box.innerHTML=cur.map((p,i)=>card(p,i===0)).join("");   // 新しい順。先頭の1件だけ大きく
   pager.innerHTML=n>1?pagerHtml(pg,n):"";
   if(first){first=false;reveal([document.querySelector("h2.sec"),...box.querySelectorAll(".note")])}
