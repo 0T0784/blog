@@ -10,6 +10,18 @@ def digest(b):   # 中身が変わると変わる短い印（ブラウザの古�
     return hashlib.md5(b).hexdigest()[:8]
 # ファイル名にこの言葉が入っている記事は、一覧には出さず「検索したときだけ」表示する（大文字小文字は区別しない）
 HIDDEN_WORDS = ["test", "private"]
+
+# GitHubのIssueに貼った画像（https://github.com/user-attachments/assets/…）のURLも、そのまま使える
+IMG_TAG = re.compile(r"<img\b[^>]*\bsrc=[\"']([^\"']+)[\"']", re.I)             # Issueが入れる <img src="…"> の形
+IMG_EXT = re.compile(r"\.(png|jpe?g|gif|webp|avif)(\?\S*)?$", re.I)
+ASSET = re.compile(r"https://github\.com/user-attachments/assets/\S+$")
+
+def pick_url(s):
+    """「images/a.jpg」「https://…」「![image](https://…)」「<img src=…>」のどれからでもURLを取り出す"""
+    m = re.search(r"!\[[^\]]*\]\(([^)\s]+)", s) or IMG_TAG.search(s)
+    if m:
+        return m.group(1)
+    return s.strip().split()[0] if s.strip() else ""
 posts = []
 for f in sorted((root / "posts").glob("*.md")):
     m = re.match(r"(\d{4}-\d{2}-\d{2})-", f.stem)
@@ -26,9 +38,9 @@ for f in sorted((root / "posts").glob("*.md")):
         if t and not title:
             title = t.group(1).strip()
             continue
-        s = re.match(r"(?:thumb|サムネ)\s*[:：]\s*(\S+)$", l, re.I)   # 「サムネ: images/xxx.jpg」でサムネを指定
+        s = re.match(r"(?:thumb|サムネ)\s*[:：]\s*(.+)$", l, re.I)   # 「サムネ: images/xxx.jpg」でサムネを指定
         if s:
-            explicit = s.group(1)
+            explicit = pick_url(s.group(1))
             continue
         tg = re.match(r"(?:tags?|タグ)\s*[:：]\s*(.+)$", l, re.I)       # 「タグ: 日常, 音楽」でタグを指定（複数OK）
         if tg:
@@ -47,8 +59,10 @@ for f in sorted((root / "posts").glob("*.md")):
             continue
         img = re.match(r"!\[.*?\]\((.+?)\)$", l)
         yt = re.search(r"(?:[?&]v=|youtu\.be/|embed/|shorts/|live/)([\w-]{11})", l) if re.match(r"https?://\S+$", l) else None
-        if img and not thumb:
-            thumb = img.group(1)
+        himg = IMG_TAG.match(l) if l.startswith("<img") else None
+        bare = l if re.match(r"https?://\S+$", l) and (ASSET.match(l) or IMG_EXT.search(l)) else None
+        if (img or himg or bare) and not thumb:
+            thumb = img.group(1) if img else himg.group(1) if himg else bare
         elif yt and not thumb:
             thumb = f"https://i.ytimg.com/vi/{yt.group(1)}/hqdefault.jpg"
     title = title or f.stem[len(m.group(0)):] or f.stem   # 題名が無いときはファイル名の日付より後ろを使う
@@ -59,14 +73,3 @@ posts.sort(key=lambda p: p["slug"], reverse=True)   # 新しい順
 (root / "posts.json").write_text(json.dumps({"posts": posts}, ensure_ascii=False, indent=1), encoding="utf-8")
 print(f"{len(posts)}件の記事で posts.json を作りました")
 
-# CSS/JS の読み込みURLに、中身の印（?v=）を自動でつける → 更新したら必ず新しいものが読み込まれる
-for page in ("index.html", "post.html"):
-    p = root / page
-    if not p.exists():
-        continue
-    s = p.read_text(encoding="utf-8")
-    for asset in ("blog.css", "blog.js"):
-        a = root / asset
-        if a.exists():
-            s = re.sub(re.escape(asset) + r'(\?v=[^"\']*)?(?=["\'])', f"{asset}?v={digest(a.read_bytes())}", s)
-    p.write_text(s, encoding="utf-8")

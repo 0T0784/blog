@@ -32,8 +32,15 @@ function md(src){
     const l=raw.trim();let m;
     if(!l){fp();fl();continue}
     if(/^#(?!#)\s*\S/.test(l)||/^(thumb|サムネ|tags?|タグ|authors?|著者|summary|概要)\s*[:：]/i.test(l))continue;                                   // 先頭の「# タイトル」は別で表示
-    if(m=l.match(/^!\[(.*?)\]\((.+?)\)$/)){fp();fl();
-      out.push(`<figure><img src="${esc(m[2])}" alt="${esc(m[1])}" loading="lazy">${m[1]?`<figcaption>${esc(m[1])}</figcaption>`:""}</figure>`);continue}
+    // 画像：![説明](URL) / <img src="URL">（Issueが入れる形） / 画像のURLだけの行 / GitHubのIssueの添付URLだけの行
+    let im=l.match(/^!\[(.*?)\]\((.+?)\)$/), src,alt="";
+    if(im){alt=im[1];src=im[2]}
+    else if(m=l.match(/^<img\b[^>]*\bsrc=["']([^"']+)["'][^>]*>$/i)){src=m[1];alt=(l.match(/\balt=["']([^"']*)["']/i)||[,""])[1]}
+    else if(/^https:\/\/github\.com\/user-attachments\/assets\/\S+$/.test(l)||/^https?:\/\/\S+\.(png|jpe?g|gif|webp|avif)(\?\S*)?$/i.test(l))src=l;
+    if(src){fp();fl();
+      if(/^(image|img|画像)$/i.test(alt.trim()))alt="";   // Issueが自動で入れる「image」は説明として出さない
+      // 動画をIssueに上げたURLだった場合は、読み込みに失敗するので動画プレーヤーに切り替える
+      out.push(`<figure><img src="${esc(src)}" alt="${esc(alt)}" loading="lazy" onerror="if(!this.dataset.v){this.dataset.v=1;var v=document.createElement('video');v.controls=true;v.src=this.src;v.style.maxWidth='100%';this.replaceWith(v)}">${alt?`<figcaption>${esc(alt)}</figcaption>`:""}</figure>`);continue}
     if(/^https?:\/\/\S+$/.test(l)){fp();fl();const id=ytId(l);                 // 単独行のURL
       out.push(id?`<div class="yt"><iframe src="https://www.youtube-nocookie.com/embed/${id}" title="YouTube動画" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen loading="lazy"></iframe></div>`
                  :`<p><a href="${esc(l)}" target="_blank" rel="noopener">${esc(l)}</a></p>`);continue}
