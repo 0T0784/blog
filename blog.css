@@ -139,3 +139,52 @@ header{z-index:10}
 footer{margin-top:96px;padding:28px 24px 36px;text-align:center;color:var(--sub);font-size:.85rem;border-top:1px solid var(--line)}
 @media(max-width:620px){.card{grid-template-columns:1fr}.card .th{border-right:1px solid var(--gilt);border-bottom:0;min-height:160px}
  .card .tx{border-left:1px solid var(--gilt);margin:0;padding:14px 16px}}
+
+/* ===== 音声プレイヤー（ノート風） ===== */
+.aud{position:relative;display:flex;align-items:center;gap:clamp(12px,3vw,20px);margin:2.4em 0;padding:18px clamp(14px,3vw,22px);border:1px solid #ecdcb9;border-radius:6px;
+  background:var(--noise),radial-gradient(400px 200px at 0 0,#fffaf0,transparent 70%),#fbf1dc;box-shadow:0 5px 16px #43261a24,0 1px 3px #43261a14;user-select:none;-webkit-user-select:none}
+.aud::before{content:"";position:absolute;top:-10px;left:22px;width:64px;height:20px;transform:rotate(-3deg);background:repeating-linear-gradient(115deg,#d9b873cc 0 8px,#e8cf99cc 8px 16px);box-shadow:0 1px 2px #43261a22}
+.aud .disc{flex:none;width:clamp(48px,11vw,68px);aspect-ratio:1;border-radius:50%;border:2px solid var(--gilt);
+  background:radial-gradient(circle,#a8321c 0 17%,#c8a66a 18% 21%,transparent 22%),repeating-radial-gradient(circle,#3a2519 0 2px,#2b1a12 2px 4px);box-shadow:0 2px 6px #43261a40}
+.aud.playing .disc{animation:spin 3.2s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.aud .am{flex:1;min-width:0}
+.aud .at{margin:0 0 6px;font-family:"Klee One","Noto Serif JP",serif;font-weight:600;font-size:1.02rem;line-height:1.6;letter-spacing:.05em;color:var(--deep);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.aud .ac{display:flex;align-items:center;gap:clamp(8px,2vw,14px)}
+.aud button{flex:none;display:grid;place-items:center;padding:0;cursor:pointer;color:#fff;font:inherit}
+.aud .pp{width:42px;height:42px;border-radius:50%;border:2px solid var(--gilt);background:linear-gradient(var(--maple),var(--deep));box-shadow:0 2px 6px #43261a40}
+.aud .pp svg{width:22px;height:22px}
+.aud .pp:hover{filter:brightness(1.12)}
+.aud .vb{width:32px;height:32px;border:0;background:none;color:var(--sub)}
+.aud .vb svg{width:22px;height:22px}
+.aud .vb:hover{color:var(--maple)}
+.aud button:focus-visible,.aud .seek:focus-visible{outline:3px solid var(--maple);outline-offset:3px}
+.aud .tm{flex:none;min-width:5.6em;text-align:right;font-family:"Klee One","Noto Serif JP",serif;font-size:.82rem;letter-spacing:.06em;font-variant-numeric:tabular-nums;color:var(--sub)}
+.aud .seek{flex:1;min-width:0;height:22px;margin:0;background:none;-webkit-appearance:none;appearance:none;cursor:pointer}
+.aud .seek::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:linear-gradient(to right,var(--maple) var(--p,0%),#e6d3a3 var(--p,0%))}
+.aud .seek::-moz-range-track{height:6px;border-radius:3px;background:linear-gradient(to right,var(--maple) var(--p,0%),#e6d3a3 var(--p,0%))}
+.aud .seek::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;margin-top:-5px;border-radius:50%;border:2px solid var(--gilt);background:#fffaf0;box-shadow:0 1px 3px #43261a55}
+.aud .seek::-moz-range-thumb{width:12px;height:12px;border-radius:50%;border:2px solid var(--gilt);background:#fffaf0;box-shadow:0 1px 3px #43261a55}
+.aud.err .at{color:var(--sub)}
+@media(max-width:480px){.aud .tm{display:none}.aud .disc{width:44px}}
+@media(prefers-reduced-motion:reduce){.aud.playing .disc{animation:none}}
+
+/* ===== ダウンロードのフォルダ ===== */
+.dlf{position:relative;margin:3.2em 0 2.4em}
+.dlf .dtab{position:absolute;top:-31px;left:16px;padding:5px 22px 4px;font-family:"Klee One","Noto Serif JP",serif;font-weight:600;font-size:.92rem;letter-spacing:.12em;color:var(--deep);
+  background:linear-gradient(#f7e8c4,#f0dcae);border:1px solid #d9bd80;border-bottom:0;border-radius:9px 9px 0 0}
+.dlf ul{list-style:none;margin:0;padding:16px clamp(10px,3vw,18px) 8px;border:1px solid #d9bd80;border-radius:0 9px 9px 9px;
+  background:var(--noise),linear-gradient(#f6e6c0,#efdba9);box-shadow:0 8px 20px #43261a29,inset 0 1px 0 #fff8;position:relative}
+.dlf ul::before{content:"";position:absolute;top:-9px;right:26px;width:62px;height:18px;transform:rotate(3deg);background:repeating-linear-gradient(115deg,#d9b873cc 0 8px,#e8cf99cc 8px 16px);box-shadow:0 1px 2px #43261a22}
+.dlr{display:flex;align-items:center;gap:clamp(10px,2.5vw,16px);margin:0 0 10px;padding:10px clamp(10px,2.5vw,16px);background:#fffaf0;border:1px solid #ecdcb9;border-radius:4px;box-shadow:0 1px 3px #43261a1f}
+.dic{position:relative;flex:none;width:38px;height:46px;display:grid;place-items:end center;padding-bottom:6px;box-sizing:border-box;font-family:"Playfair Display",serif;font-weight:700;font-size:.62rem;letter-spacing:.04em;color:var(--maple);
+  background:#fff;border:1px solid #d9bd80;border-radius:3px 12px 3px 3px;overflow:hidden}
+.dic::before{content:"";position:absolute;top:0;right:0;width:12px;height:12px;background:linear-gradient(225deg,#f0dcae 50%,#d9bd80 50%)}
+.dnm{flex:1;min-width:0;display:flex;flex-direction:column}
+.dnm b{font-family:"Klee One","Noto Serif JP",serif;font-weight:600;color:var(--deep);line-height:1.6;letter-spacing:.04em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dnm small{font-size:.78rem;letter-spacing:.1em;color:var(--sub)}
+.dbtn{flex:none;display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border:2px solid var(--gilt);border-radius:999px;background:linear-gradient(var(--maple),var(--deep));color:#fff;text-decoration:none;font-family:"Klee One","Noto Serif JP",serif;font-weight:600;font-size:.88rem;letter-spacing:.06em;box-shadow:0 2px 5px #43261a38}
+.dbtn svg{width:18px;height:18px}
+.dbtn:hover{filter:brightness(1.12)}
+.dbtn:focus-visible{outline:3px solid var(--maple);outline-offset:3px}
+@media(max-width:480px){.dbtn span{display:none}.dbtn{padding:8px}.dic{width:34px;height:42px}}

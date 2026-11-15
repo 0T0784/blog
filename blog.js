@@ -21,17 +21,43 @@ function chrome(cur){
   document.body.insertAdjacentHTML("beforeend",`<footer>© ${SITE.name}</footer>`);
 }
 
+// 音声／ダウンロード用ファイルの判定（GitHubのIssueの添付 https://github.com/user-attachments/files/… も対象）
+const AU=/\.(mp3|m4a|aac|wav|ogg|opus|flac)(\?\S*)?$/i;
+const DLX=/\.(zip|7z|rar|pdf|txt|docx?|xlsx?|pptx?|csv|json|mid|midi|sf2|psd|ai|xcf|apk|exe|dmg|tar|gz)(\?\S*)?$/i;
+const ISSUE_FILE=/^https:\/\/github\.com\/user-attachments\/files\/\S+$/;
+const dlParse=l=>{   // 「ダウンロード: パス | 表示名」または ファイルのURLだけの行
+  const m=l.match(/^(?:ダウンロード|download)\s*[:：]\s*([^|｜]+?)\s*(?:[|｜]\s*(.+))?$/i);
+  if(m)return{f:m[1],t:m[2]||""};
+  if(/^https?:\/\/\S+$/.test(l)&&!AU.test(l)&&(ISSUE_FILE.test(l)||DLX.test(l)))return{f:l,t:""};
+  return null;
+};
+const dlRow=({f,t})=>{
+  const base=decodeURIComponent(f.split("?")[0].split("/").pop()||f), ext=((base.match(/\.([^.]+)$/)||[,"FILE"])[1]).toUpperCase().slice(0,4);
+  return `<li class="dlr"><span class="dic" aria-hidden="true">${esc(ext)}</span><span class="dnm"><b>${esc(t||base)}</b><small>${esc(ext)}</small></span><a class="dbtn" href="${esc(f)}" download="${esc(base)}" target="_blank" rel="noopener">${IC.dl}<span>ダウンロード</span></a></li>`;
+};
+
 // Markdown（よく使う書き方だけ）→ HTML
 const inline=s=>esc(s).replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>")
   .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
 function md(src){
-  const out=[];let p=[],ul=[];
+  const out=[];let p=[],ul=[],dl=[],dlLabel="";
   const fp=()=>{if(p.length){out.push("<p>"+p.map(inline).join("<br>")+"</p>");p=[]}};
+  const fd=()=>{if(dl.length){out.push(`<div class="dlf"><span class="dtab">${esc(dlLabel||"ダウンロード")}</span><ul>${dl.map(dlRow).join("")}</ul></div>`);dl=[];dlLabel=""}};
   const fl=()=>{if(ul.length){out.push("<ul>"+ul.map(x=>"<li>"+inline(x)+"</li>").join("")+"</ul>");ul=[]}};
   for(const raw of src.split(/\r?\n/)){
     const l=raw.trim();let m;
     if(!l){fp();fl();continue}
+    let fo=l.match(/^(?:フォルダ|folder)\s*[:：]\s*(.+)$/i);     // フォルダの見出し（省略可）
+    if(fo){fp();fl();dlLabel=fo[1].trim();continue}
+    let dd=/^(?:音声|audio)\s*[:：]/i.test(l)?null:dlParse(l);   // 続けて書いたダウンロードは、1つのフォルダにまとめる
+    if(dd){fp();fl();dl.push(dd);continue}
+    fd();
     if(/^#(?!#)\s*\S/.test(l)||/^(thumb|サムネ|tags?|タグ|authors?|著者|summary|概要)\s*[:：]/i.test(l))continue;                                   // 先頭の「# タイトル」は別で表示
+    // 音声：「音声: audio/曲.mp3 | 表示するタイトル」または 音声ファイルのURLだけの行 → オリジナルの再生プレイヤー
+    let ad=l.match(/^(?:音声|audio)\s*[:：]\s*([^|｜]+?)\s*(?:[|｜]\s*(.+))?$/i);
+    if(ad||(/^https?:\/\/\S+$/.test(l)&&AU.test(l))){
+      const f=ad?ad[1]:l, t=(ad&&ad[2])||decodeURIComponent(f.split("?")[0].split("/").pop()).replace(/\.[^.]+$/,"");
+      fp();fl();out.push(`<div class="aud" data-src="${esc(f)}" data-title="${esc(t)}"></div>`);continue}
     // 画像：![説明](URL) / <img src="URL">（Issueが入れる形） / 画像のURLだけの行 / GitHubのIssueの添付URLだけの行
     let im=l.match(/^!\[(.*?)\]\((.+?)\)$/), src,alt="";
     if(im){alt=im[1];src=im[2]}
@@ -49,7 +75,7 @@ function md(src){
     if(m=l.match(/^>\s?(.*)/)){fp();fl();out.push("<blockquote>"+inline(m[1])+"</blockquote>");continue}
     fl();p.push(l);
   }
-  fp();fl();return out.join("\n");
+  fp();fl();fd();return out.join("\n");
 }
 const getPosts=()=>fetch("posts.json",{cache:"no-store"}).then(r=>r.json()).then(j=>j.posts);
 
@@ -63,3 +89,52 @@ const avatar=(name,auth)=>{
   const src=auth&&auth[name], ini=esc([...name][0]||"?");
   return `<span class="av">${src?`<img src="${esc(src)}" alt="" data-i="${ini}" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('b'),{textContent:this.dataset.i}))">`:`<b>${ini}</b>`}</span>`;
 };
+
+// ===== 音声プレイヤー（標準のコントロールは使わず、ブログのデザインに合わせて自作）=====
+const IC={
+  play:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg>',
+  pause:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3.6v14H7zM13.4 5H17v14h-3.6z" fill="currentColor"/></svg>',
+  vol:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z" fill="currentColor"/><path d="M15 9a4 4 0 0 1 0 6M17.5 6.5a7.5 7.5 0 0 1 0 11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+  dl:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v10m0 0l-4-4m4 4l4-4M5 19h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  mute:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5z" fill="currentColor"/><path d="M15.5 9.5l5 5m0-5l-5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>'
+};
+let CURRENT=null;   // 再生中は1つだけ
+const mmss=t=>isFinite(t)?`${Math.floor(t/60)}:${String(Math.floor(t%60)).padStart(2,"0")}`:"--:--";
+function initAudio(root){
+  root.querySelectorAll(".aud").forEach(el=>{
+    const src=el.dataset.src, title=el.dataset.title;
+    el.removeAttribute("data-src");   // ページの中に音声のURLを直接は残さない（簡易的な対策）
+    el.innerHTML=`<div class="disc" aria-hidden="true"></div>
+      <div class="am"><p class="at">${esc(title)}</p>
+        <div class="ac"><button class="pp" type="button" aria-label="再生">${IC.play}</button>
+          <input class="seek" type="range" min="0" max="1000" value="0" step="1" aria-label="再生位置" style="--p:0%">
+          <span class="tm">0:00 / --:--</span>
+          <button class="vb" type="button" aria-label="消音">${IC.vol}</button></div></div>`;
+    const a=new Audio(); a.preload="metadata"; a.src=src;
+    const pp=el.querySelector(".pp"), sk=el.querySelector(".seek"), tm=el.querySelector(".tm"), vb=el.querySelector(".vb");
+    let drag=false;
+    const paint=()=>{const d=a.duration,p=isFinite(d)&&d>0?a.currentTime/d*100:0;
+      if(!drag){sk.value=p*10}sk.style.setProperty("--p",(drag?sk.value/10:p)+"%");tm.textContent=`${mmss(a.currentTime)} / ${mmss(a.duration)}`};
+    pp.onclick=()=>{a.paused?a.play().catch(()=>el.classList.add("err")):a.pause()};
+    a.onplay=()=>{if(CURRENT&&CURRENT!==a)CURRENT.pause();CURRENT=a;el.classList.add("playing");pp.innerHTML=IC.pause;pp.setAttribute("aria-label","一時停止")};
+    a.onpause=()=>{el.classList.remove("playing");pp.innerHTML=IC.play;pp.setAttribute("aria-label","再生")};
+    a.onended=()=>{a.currentTime=0;paint()};
+    a.onloadedmetadata=a.ontimeupdate=a.ondurationchange=paint;
+    a.onerror=()=>{el.classList.add("err");el.querySelector(".at").textContent=title+"（読み込めませんでした）"};
+    sk.oninput=()=>{drag=true;sk.style.setProperty("--p",sk.value/10+"%");if(isFinite(a.duration))a.currentTime=sk.value/1000*a.duration;};
+    sk.onchange=()=>{drag=false;paint()};
+    vb.onclick=()=>{a.muted=!a.muted;vb.innerHTML=a.muted?IC.mute:IC.vol;vb.setAttribute("aria-label",a.muted?"消音を解除":"消音")};
+    el.addEventListener("contextmenu",e=>e.preventDefault());   // 右クリックの「名前を付けて保存」を出さない（簡易的な対策）
+  });
+}
+
+// ===== ダウンロードのフォルダ：同じサイト内のファイルは、サイズを調べて表示する =====
+const fmtSize=n=>n>=1048576?(n/1048576).toFixed(1)+" MB":Math.max(1,Math.round(n/1024))+" KB";
+function initDownloads(root){
+  root.querySelectorAll(".dlr").forEach(li=>{
+    const a=li.querySelector(".dbtn"), sm=li.querySelector("small");
+    let u;try{u=new URL(a.getAttribute("href"),location.href)}catch(e){return}
+    if(u.origin!==location.origin)return;
+    fetch(u,{method:"HEAD"}).then(r=>{const n=+r.headers.get("content-length");if(r.ok&&n)sm.textContent+=" ・ "+fmtSize(n)}).catch(()=>{});
+  });
+}
