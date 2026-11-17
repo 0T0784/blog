@@ -72,6 +72,8 @@ for f in sorted((root / "posts").glob("*.md")):
         if sm:
             excerpt = excerpt or sm.group(1).strip()
             continue
+        if re.match(r"(?:目次|toc)\s*[:：]", l, re.I):      # 「目次: なし」などの設定の行（一覧には使わない）
+            continue
         img = re.match(r"!\[.*?\]\((.+?)\)$", l)
         yt = re.search(r"(?:[?&]v=|youtu\.be/|embed/|shorts/|live/)([\w-]{11})", l) if re.match(r"https?://\S+$", l) else None
         himg = IMG_TAG.match(l) if l.startswith("<img") else None

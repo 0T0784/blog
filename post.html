@@ -33,8 +33,10 @@ chrome(true);
       <div class="body">${md(src)}</div>${au?`<div class="by"><div class="au">${avatar(au,auth)}<span>${esc(au)}</span></div></div>`:""}</article>
       <div class="pn">${nb(vis[i+1],"← "+(vis[i+1]?esc(vis[i+1].title):""))}${nb(vis[i-1],(vis[i-1]?esc(vis[i-1].title):"")+" →")}</div>
       <p class="back"><a class="btn" href="index.html">記事一覧へ</a></p>`;
+    initToc(box,src);       // 目次（見出しが2つ以上あるとき）
     initAudio(box);        // 音声プレイヤーを組み立てる
     initDownloads(box);    // ダウンロードのフォルダにサイズを表示する
+    if(location.hash){const el=document.getElementById(decodeURIComponent(location.hash.slice(1)));if(el)setTimeout(()=>el.scrollIntoView(),50)}   // 見出しへのリンクで開いたとき
   }catch(e){box.innerHTML='<p class="empty">記事が見つかりませんでした。</p><p class="back"><a class="btn" href="index.html">記事一覧へ</a></p>'}
 })();
 </script>

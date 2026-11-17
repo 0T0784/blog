@@ -41,6 +41,8 @@ const inline=s=>esc(s).replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>")
   .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
 function md(src){
   const out=[];let p=[],ul=[],dl=[],dlLabel="",bq=[];
+  const used=new Set();   // 見出しの目印（ID）：見出しの文字から作る。同じ文字があれば -2, -3 を付ける
+  const hid=t=>{const b=t.replace(/[*_`\[\]()!#<>?.,;:'"“”\/\\&%+=|{}^~]/g,"").trim().replace(/\s+/g,"-")||"midashi";let id=b,n=2;while(used.has(id))id=b+"-"+n++;used.add(id);return id};
   const fp=()=>{if(p.length){out.push("<p>"+p.map(inline).join("<br>")+"</p>");p=[]}};
   const fd=()=>{if(dl.length){out.push(`<div class="dlf"><span class="dtab">${esc(dlLabel||"ダウンロード")}</span><ul>${dl.map(dlRow).join("")}</ul></div>`);dl=[];dlLabel=""}};
   const DIV=/^(?:-{3,}|\*{3,}|_{3,})$/;   // 区切り線（--- や ***）
@@ -64,7 +66,7 @@ function md(src){
     fq();
     fd();
     if(DIV.test(l)){fp();fl();out.push("<hr>");continue}
-    if(/^#(?!#)\s*\S/.test(l)||/^(thumb|サムネ|tags?|タグ|authors?|著者|summary|概要)\s*[:：]/i.test(l))continue;                                   // 先頭の「# タイトル」は別で表示
+    if(/^#(?!#)\s*\S/.test(l)||/^(thumb|サムネ|tags?|タグ|authors?|著者|summary|概要|目次|toc)\s*[:：]/i.test(l))continue;                                   // 先頭の「# タイトル」は別で表示
     // 音声：「音声: audio/曲.mp3 | 表示するタイトル」または 音声ファイルのURLだけの行 → オリジナルの再生プレイヤー
     let ad=l.match(/^(?:音声|audio)\s*[:：]\s*([^|｜]+?)\s*(?:[|｜]\s*(.+))?$/i);
     if(ad||(/^https?:\/\/\S+$/.test(l)&&AU.test(l))){
@@ -82,7 +84,7 @@ function md(src){
     if(/^https?:\/\/\S+$/.test(l)){fp();fl();const id=ytId(l);                 // 単独行のURL
       out.push(id?`<div class="yt"><iframe src="https://www.youtube-nocookie.com/embed/${id}" title="YouTube動画" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen loading="lazy"></iframe></div>`
                  :`<p><a href="${esc(l)}" target="_blank" rel="noopener">${esc(l)}</a></p>`);continue}
-    if(m=l.match(/^(#{2,3})\s+(.+)/)){fp();fl();const t=m[1].length===2?"h3":"h4";out.push(`<${t}>${inline(m[2])}</${t}>`);continue}
+    if(m=l.match(/^(#{2,3})\s+(.+)/)){fp();fl();const t=m[1].length===2?"h3":"h4";out.push(`<${t} id="${esc(hid(m[2]))}">${inline(m[2])}</${t}>`);continue}
     if(m=l.match(/^[-*]\s+(.+)/)){fp();ul.push(m[1]);continue}
     fl();p.push(l);
   }
@@ -148,4 +150,28 @@ function initDownloads(root){
     if(u.origin!==location.origin)return;
     fetch(u,{method:"HEAD"}).then(r=>{const n=+r.headers.get("content-length");if(r.ok&&n)sm.textContent+=" ・ "+fmtSize(n)}).catch(()=>{});
   });
+}
+
+// ===== 目次（見出し ## と ### から自動で作る） =====
+const TOC_MIN=2;   // 見出しがこの数以上あるときだけ出す
+function tocMode(src){   // 記事に「目次: なし」と書けば出さない。「目次: あり」なら、見出しが1つでも出す
+  const m=(src||"").match(/^(?:目次|toc)\s*[:：]\s*(.+)$/im);if(!m)return"auto";
+  const v=m[1].trim().toLowerCase();
+  return /^(なし|off|no|false|非表示|0)$/.test(v)?"off":/^(あり|on|yes|true|表示|1)$/.test(v)?"on":"auto";
+}
+function initToc(root,src){
+  const mode=tocMode(src),body=root.querySelector(".body");
+  if(!body||mode==="off")return;
+  const hs=[...body.querySelectorAll(":scope>h3,:scope>h4")];
+  if(hs.length<(mode==="on"?1:TOC_MIN))return;
+  let html="<ol>",inLi=false,inSub=false;
+  hs.forEach(h=>{
+    const a=`<a href="#${esc(h.id)}">${esc(h.textContent)}</a>`;
+    if(h.tagName==="H4"&&inLi){if(!inSub){html+="<ol>";inSub=true}html+=`<li>${a}</li>`}
+    else{if(inSub){html+="</ol>";inSub=false}if(inLi)html+="</li>";html+=`<li>${a}`;inLi=true}
+  });
+  if(inSub)html+="</ol>";if(inLi)html+="</li>";html+="</ol>";
+  const nav=document.createElement("nav");nav.className="toc";nav.setAttribute("aria-label","目次");
+  nav.innerHTML=`<details open><summary>目次</summary>${html}</details>`;
+  hs[0].before(nav);   // 最初の見出しの手前（前置きの文章のあと）に置く
 }

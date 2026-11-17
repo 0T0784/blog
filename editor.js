@@ -161,6 +161,7 @@ async function preview(){
   box.querySelectorAll("img").forEach(i=>{const u=blobUrls.get(i.getAttribute("src"));if(u)i.src=u});
   box.querySelectorAll(".aud").forEach(a=>{const u=blobUrls.get(a.dataset.src);if(u)a.dataset.src=u});
   box.querySelectorAll(".dbtn").forEach(a=>{const u=blobUrls.get(a.getAttribute("href"));if(u)a.href=u});
+  initToc(box,f.body);
   initAudio(box);
 }
 
