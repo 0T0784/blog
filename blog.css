@@ -123,6 +123,10 @@ header{z-index:10}
 .body ul{margin:0 0 1.7em;padding-left:1.4em}
 .body li::marker{color:var(--maple)}
 .body blockquote{margin:0 0 1.7em;padding:.3em 1.1em;background:#f6e9cdb3;border-left:4px solid #dcc18a;border-radius:0 6px 6px 0;color:var(--sub)}
+.body hr{border:0;height:8px;margin:2.2em 0;background:var(--wave) repeat-x center/24px 8px}
+.body blockquote p{margin:0 0 .9em}
+.body blockquote p:last-child{margin:0}
+.body blockquote hr{margin:1em 0;opacity:.85}
 .body figure{position:relative;width:fit-content;max-width:100%;margin:2.2em auto;padding:10px 10px 12px;background:#fffdf7;text-align:center;box-shadow:0 4px 14px #43261a2e;transform:rotate(-1.2deg)}
 .body figure:nth-of-type(even){transform:rotate(1deg)}
 .body figure::before{content:"";position:absolute;top:-11px;left:50%;width:70px;height:20px;transform:translateX(-50%) rotate(2deg);background:#e2c68ab3;box-shadow:0 1px 2px #43261a22}

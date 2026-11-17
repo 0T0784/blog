@@ -88,7 +88,11 @@ function insert(s,{block=false}={}){
   const pos=a+pre.length+s.length+post.length;ta.focus();ta.setSelectionRange(pos,pos);save();
 }
 function wrap(l,r){const a=ta.selectionStart,b=ta.selectionEnd,v=ta.value;ta.value=v.slice(0,a)+l+v.slice(a,b)+r+v.slice(b);ta.focus();ta.setSelectionRange(a+l.length,b+l.length);save()}
-function prefix(p){const a=ta.selectionStart,v=ta.value,ls=v.lastIndexOf("\n",a-1)+1;ta.value=v.slice(0,ls)+p+v.slice(ls);ta.focus();ta.setSelectionRange(a+p.length,a+p.length);save()}
+function prefix(p){   // 選んだ複数行すべての行頭に付ける
+  const v=ta.value,a=ta.selectionStart;let b=ta.selectionEnd;if(b>a&&v[b-1]==="\n")b--;
+  const ls=v.lastIndexOf("\n",a-1)+1,seg=v.slice(ls,b),out=seg.split("\n").map(x=>p+x).join("\n");
+  ta.value=v.slice(0,ls)+out+v.slice(b);ta.focus();ta.setSelectionRange(a+p.length,b+(out.length-seg.length));save();
+}
 function pickFile(accept,multiple=true){
   return new Promise(res=>{const i=document.createElement("input");i.type="file";i.accept=accept;i.multiple=multiple;i.onchange=()=>res([...i.files]);i.click()});
 }
@@ -131,7 +135,7 @@ async function insFile(){
   insert(L.join("\n"),{block:true});
 }
 const TOOLS=[["見出し",()=>prefix("## ")],["太字",()=>wrap("**","**")],["リンク",()=>{const u=prompt("リンク先のURL");if(!u)return;const s=ta.value.slice(ta.selectionStart,ta.selectionEnd)||prompt("リンクの文字")||u;insert(`[${s}](${u})`)}],
-  ["引用",()=>prefix("> ")],["リスト",()=>prefix("- ")],["写真",insPhoto],["YouTube",()=>{const u=prompt("YouTubeのURL");if(u)insert(u.trim(),{block:true})}],
+  ["引用",()=>prefix("> ")],["区切り線",()=>insert("---",{block:true})],["リスト",()=>prefix("- ")],["写真",insPhoto],["YouTube",()=>{const u=prompt("YouTubeのURL");if(u)insert(u.trim(),{block:true})}],
   ["音声",insAudio],["ファイル",insFile],["追記",()=>{const d=todayStr().replace(/-/g,"/");insert(`${d} 追記: `,{block:true})}]];
 TOOLS.forEach(([n,f])=>{const b=document.createElement("button");b.type="button";b.textContent=n;b.onclick=f;$("tool").append(b)});
 

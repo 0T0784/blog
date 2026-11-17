@@ -40,18 +40,30 @@ const dlRow=({f,t})=>{
 const inline=s=>esc(s).replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>")
   .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
 function md(src){
-  const out=[];let p=[],ul=[],dl=[],dlLabel="";
+  const out=[];let p=[],ul=[],dl=[],dlLabel="",bq=[];
   const fp=()=>{if(p.length){out.push("<p>"+p.map(inline).join("<br>")+"</p>");p=[]}};
   const fd=()=>{if(dl.length){out.push(`<div class="dlf"><span class="dtab">${esc(dlLabel||"ダウンロード")}</span><ul>${dl.map(dlRow).join("")}</ul></div>`);dl=[];dlLabel=""}};
+  const DIV=/^(?:-{3,}|\*{3,}|_{3,})$/;   // 区切り線（--- や ***）
+  const fq=()=>{   // 引用：続けて「> 」で始めた行を1つの引用にまとめる。「>」だけの行で段落を分け、「> ---」で区切り線を入れる
+    if(!bq.length)return;
+    const parts=[];let cur=[];
+    const end=()=>{if(cur.length){parts.push("<p>"+cur.map(inline).join("<br>")+"</p>");cur=[]}};
+    bq.forEach(t=>{t=t.trim();if(!t)end();else if(DIV.test(t)){end();parts.push("<hr>")}else cur.push(t)});
+    end();out.push("<blockquote>"+parts.join("")+"</blockquote>");bq=[];
+  };
   const fl=()=>{if(ul.length){out.push("<ul>"+ul.map(x=>"<li>"+inline(x)+"</li>").join("")+"</ul>");ul=[]}};
   for(const raw of src.split(/\r?\n/)){
     const l=raw.trim();let m;
-    if(!l){fp();fl();continue}
+    if(!l){fp();fl();fq();continue}
     let fo=l.match(/^(?:フォルダ|folder)\s*[:：]\s*(.+)$/i);     // フォルダの見出し（省略可）
-    if(fo){fp();fl();dlLabel=fo[1].trim();continue}
+    if(fo){fp();fl();fq();dlLabel=fo[1].trim();continue}
     let dd=/^(?:音声|audio)\s*[:：]/i.test(l)?null:dlParse(l);   // 続けて書いたダウンロードは、1つのフォルダにまとめる
-    if(dd){fp();fl();dl.push(dd);continue}
+    if(dd){fp();fl();fq();dl.push(dd);continue}
+    const qm=l.match(/^>\s?(.*)$/);
+    if(qm){fp();fl();fd();bq.push(qm[1]);continue}
+    fq();
     fd();
+    if(DIV.test(l)){fp();fl();out.push("<hr>");continue}
     if(/^#(?!#)\s*\S/.test(l)||/^(thumb|サムネ|tags?|タグ|authors?|著者|summary|概要)\s*[:：]/i.test(l))continue;                                   // 先頭の「# タイトル」は別で表示
     // 音声：「音声: audio/曲.mp3 | 表示するタイトル」または 音声ファイルのURLだけの行 → オリジナルの再生プレイヤー
     let ad=l.match(/^(?:音声|audio)\s*[:：]\s*([^|｜]+?)\s*(?:[|｜]\s*(.+))?$/i);
@@ -72,10 +84,9 @@ function md(src){
                  :`<p><a href="${esc(l)}" target="_blank" rel="noopener">${esc(l)}</a></p>`);continue}
     if(m=l.match(/^(#{2,3})\s+(.+)/)){fp();fl();const t=m[1].length===2?"h3":"h4";out.push(`<${t}>${inline(m[2])}</${t}>`);continue}
     if(m=l.match(/^[-*]\s+(.+)/)){fp();ul.push(m[1]);continue}
-    if(m=l.match(/^>\s?(.*)/)){fp();fl();out.push("<blockquote>"+inline(m[1])+"</blockquote>");continue}
     fl();p.push(l);
   }
-  fp();fl();fd();return out.join("\n");
+  fp();fl();fq();fd();return out.join("\n");
 }
 const getPosts=()=>fetch("posts.json",{cache:"no-store"}).then(r=>r.json()).then(j=>j.posts);
 

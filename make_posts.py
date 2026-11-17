@@ -83,7 +83,7 @@ for f in sorted((root / "posts").glob("*.md")):
         if NOTE_RE.match(l):                       # 追記の表記は、いちばん最後（＝新しい）ものを覚えておく
             note = clean(l)
         # 本文の文章（見出し・画像・URL・「日付＋追記」の行は除く）を、大きいカード用に集める
-        if img or himg or bare or yt or l.startswith(("#", "<", ">", "|", "```", "---")) or re.match(r"https?://\S+$", l) or re.match(r"(?:音声|audio|ダウンロード|download|フォルダ|folder)\s*[:：]", l, re.I):
+        if img or himg or bare or yt or l.startswith(("#", "<", ">", "|", "```", "---", "***", "___")) or re.match(r"https?://\S+$", l) or re.match(r"(?:音声|audio|ダウンロード|download|フォルダ|folder)\s*[:：]", l, re.I):
             continue
         if DATE_NOTE.match(l) or re.search(r"追記|更新", l[:12]):
             continue
