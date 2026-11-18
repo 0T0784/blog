@@ -11,7 +11,8 @@
 
 今回の作品は、私の趣味で続けていた音楽制作を、せっかくなら何か一つの形にしてみようと思い立ったところから始まりました。
 
-タイトルは『牛屎院風土記 〜 Unknown Chronicles of Hidden Land.』。
+今回のサウンドトラックのタイトルは…
+『牛屎院風土記 〜 Unknown Chronicles of Hidden Land.』
 
 ……読めますかね、これ。
 
